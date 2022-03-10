@@ -83,12 +83,21 @@ func getDgraphClient() (*dgo.Dgraph, CancelFunc) {
 func TestDropAll(t *testing.T) {
 	dg, cancel := getDgraphClient()
 	defer cancel()
-	op := api.Operation{DropAll: true}
-	ctx := context.Background()
-	if err := dg.Alter(ctx, &op); err != nil {
+
+	if err := dg.Alter(context.Background(), &api.Operation{DropAll: true}); err != nil {
 		t.Fatal(err)
 	}
-	// Output:
+}
+
+func TestDropType(t *testing.T) {
+	dg, cancel := getDgraphClient()
+	defer cancel()
+
+	if err := dg.Alter(context.Background(), &api.Operation{
+		DropOp:    api.Operation_TYPE,
+		DropValue: "user"}); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestAlter(t *testing.T) {
