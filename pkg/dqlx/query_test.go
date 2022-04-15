@@ -19,10 +19,7 @@ func TestQuery(t *testing.T) {
 				Eq("gender", "female"),
 			)).
 		Recurse(10, true).
-		Paginate(Cursor{
-			First:  3,
-			Offset: 5,
-		}).
+		First(3).Offset(5).
 		Name("test").
 		OrderAsc("asset").
 		OrderDesc("age").
@@ -40,22 +37,22 @@ func TestQuery(t *testing.T) {
 			Cursor{First: 10},
 		)
 
-	query, variables, err := QueriesToDQL(var1, test)
+	query, variables, err := ToDql(var1, test)
 	fmt.Println(query)
 
 	require.NoError(t, err)
 
 	expected := `
-	query Variable_Test($0:string, $1:string, $2:int, $3:int, $4:int, $5:float, $6:string, $7:int, $8:bool, $9:string, $10:int) {
+	query Variable_Test($0:int, $1:int, $2:int, $3:float, $4:string, $5:int, $6:bool, $7:string, $8:int) {
 		<V> AS var(func: has(<name>)) {
 			<uid>
 		}
-
-		<test>(func: uid(<V>,$0,$1), orderasc: <asset>, orderdesc: <age>, first: $2, offset: $3) @filter(((lt(<age>,$4) AND ge(<height>,$5)) OR eq(<gender>,$6))) @recurse(depth: $7,loop: $8) {
+	
+		<test>(func: uid(<V>,0x123,0x124), orderasc: <asset>, orderdesc: <age>, first: $0, offset: $1) @filter(((lt(<age>,$2) AND ge(<height>,$3)) OR eq(<gender>,$4))) @recurse(depth: $5,loop: $6) {
 			<uid>
-			<follow> @facets(<follow_time> : <time>) @facets(eq(<type>,$9)) {
+			<follow> @facets(<follow_time> : <time>) @facets(eq(<type>,$7)) {
 				<follow_count> : count(<uid>)
-				<subscribe> (first: $10) @facets {
+				<subscribe> (first: $8) @facets {
 					expand(_all_)
 				}
 			}
@@ -64,16 +61,14 @@ func TestQuery(t *testing.T) {
 	require.Equal(t, Minify(expected), Minify(query))
 
 	require.Equal(t, map[string]string{
-		"$0":  "0x123",
-		"$1":  "0x124",
-		"$2":  "3",
-		"$3":  "5",
-		"$4":  "20",
-		"$5":  "1.8",
-		"$6":  "female",
-		"$7":  "10",
-		"$8":  "true",
-		"$9":  "favourite",
-		"$10": "10",
+		"$0": "3",
+		"$1": "5",
+		"$2": "20",
+		"$3": "1.8",
+		"$4": "female",
+		"$5": "10",
+		"$6": "true",
+		"$7": "favourite",
+		"$8": "10",
 	}, variables)
 }

@@ -4,9 +4,8 @@ import (
 	"strings"
 )
 
-// escapePredicate safely escape a predicate
-// Example: dqlx.EscapePredicate("predicate")
-func escapePredicate(predicate string) string {
+// Escape safely escape a predicate
+func Escape(predicate string) string {
 	return "<" + escapeSpecialChars(predicate) + ">"
 }
 

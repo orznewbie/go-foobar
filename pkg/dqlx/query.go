@@ -10,8 +10,8 @@ type node struct {
 	filter     Filter
 	pagination *Cursor
 	order      []*Order
-	facets     []*facetsDirective
-	fields     *fields
+	facets     []*FacetsDirective
+	fields     *Fields
 }
 
 func (node *node) hasFields() bool {
@@ -33,12 +33,12 @@ type QueryTree struct {
 	name       string
 	rootFilter Filter
 	filter     Filter
-	recurse    *recurseDirective
+	recurse    *RecurseDirective
 	pagination *Cursor
 	order      []*Order
-	cascade    *cascadeDirective
-	normalize  *normalizeDirective
-	fields     *fields
+	cascade    *CascadeDirective
+	normalize  *NormalizeDirective
+	fields     *Fields
 
 	nodes           map[string]*node
 	childQueryTrees map[string][]string
@@ -52,26 +52,34 @@ func (tree *QueryTree) hasFields() bool {
 	return tree.fields != nil && len(tree.fields.predicates) > 0
 }
 
-// ToDQL returns the current state of the query as DQL string
-// Example: dqlx.Query(...).ToDQL()
-func (tree *QueryTree) ToDQL() (query string, args map[string]string, err error) {
-	return QueriesToDQL(tree)
+// ToDql returns the current state of the query as DQL string
+// Example: dqlx.Query(...).ToDql()
+func (tree *QueryTree) ToDql() (query string, args map[string]string, err error) {
+	return ToDql(tree)
 }
 
-// Query initialises a query tree with the provided root filter
+// Query initialises a query tree
 // example: dqlx.Query(dqlx.Eq(..,..))
 func Query(rootFilter Filter) *QueryTree {
 	queryTree := &QueryTree{
 		isVariable:      false,
+		varName:         "",
 		name:            "query",
 		rootFilter:      rootFilter,
+		filter:          nil,
+		recurse:         nil,
+		pagination:      &Cursor{},
+		order:           nil,
+		cascade:         nil,
+		normalize:       nil,
+		fields:          &Fields{},
 		nodes:           make(map[string]*node),
 		childQueryTrees: make(map[string][]string),
 	}
 	return queryTree
 }
 
-// Name sets the name of the edge
+// Name sets the name of the query
 // Example: dqlx.Query(...).Name("bladerunner")
 // DQL: { bladerunner(func: ...) { ... }
 func (tree *QueryTree) Name(name string) *QueryTree {
@@ -96,22 +104,21 @@ func VarAs(varName string, rootFilter Filter) *QueryTree {
 	return queryTree
 }
 
-// Filter requests filters for this query
+// Filter adds @filter for the query
 // Example: dqlx.Query(...).Filter(dqlx.Eq{...})
 func (tree *QueryTree) Filter(filter Filter) *QueryTree {
 	tree.filter = filter
 	return tree
 }
 
-// Recurse adds recurse directive
-func (tree *QueryTree) Recurse(depth int, loop bool) *QueryTree {
+// Recurse adds @recurse directive
+func (tree *QueryTree) Recurse(depth int64, loop bool) *QueryTree {
 	tree.recurse = Recurse(depth, loop)
 	return tree
 }
 
-// Order requests an ordering for the result set
-// Example1: dqlx.Query(...).Order(dqlx.OrderAsc("field1"))
-// Example2: dqlx.Query(...).Order(dqlx.OrderDesc("field2"))
+// Order adds orders for the result set
+// Example1: dqlx.Query(...).Order(dqlx.OrderAsc("field1"),dqlx.OrderDesc("field2"))
 func (tree *QueryTree) Order(order ...*Order) *QueryTree {
 	tree.order = append(tree.order, order...)
 	return tree
@@ -119,7 +126,6 @@ func (tree *QueryTree) Order(order ...*Order) *QueryTree {
 
 // OrderAsc alias for ordering in ascending order
 // Example:    dqlx.Query(...).OrderAsc("field1")
-// Equivalent: dqlx.Query(...).Order(dqlx.OrderAsc("field1"))
 func (tree *QueryTree) OrderAsc(predicate interface{}) *QueryTree {
 	tree.order = append(tree.order, OrderAsc(predicate))
 	return tree
@@ -127,36 +133,43 @@ func (tree *QueryTree) OrderAsc(predicate interface{}) *QueryTree {
 
 // OrderDesc alias for ordering in descending order
 // Example:    dqlx.Query(...).OrderDesc("field1")
-// Equivalent: dqlx.Query(...).Order(dqlx.OrderDesc("field1"))
 func (tree *QueryTree) OrderDesc(predicate interface{}) *QueryTree {
 	tree.order = append(tree.order, OrderDesc(predicate))
 	return tree
 }
 
-// Paginate requests paginated results
-// Example: dqlx.Query(...).Paginate(dqlx.Cursor{...})
-func (tree *QueryTree) Paginate(pagination Cursor) *QueryTree {
-	tree.pagination = &pagination
+// First adds pagination first
+func (tree *QueryTree) First(first int64) *QueryTree {
+	tree.pagination.First = first
+	return tree
+}
+
+// Offset adds offset first
+func (tree *QueryTree) Offset(offset int64) *QueryTree {
+	tree.pagination.Offset = offset
+	return tree
+}
+
+// After adds pagination after
+func (tree *QueryTree) After(after string) *QueryTree {
+	tree.pagination.After = after
 	return tree
 }
 
 // Select assigns predicates to the selection set
 // Example: dqlx.Query(...).Select("field1", "field2", "field3")
 func (tree *QueryTree) Select(predicates ...interface{}) *QueryTree {
-	if len(predicates) == 0 {
-		return tree
-	}
-	tree.fields = Select(predicates...)
+	tree.fields.predicates = append(tree.fields.predicates, predicates...)
 	return tree
 }
 
-// Cascade represents @cascade directive
+// Cascade adds @cascade directive
 func (tree *QueryTree) Cascade() *QueryTree {
 	tree.cascade = Cascade()
 	return tree
 }
 
-// Normalize represents @normalize directive
+// Normalize adds @normalize directive
 func (tree *QueryTree) Normalize() *QueryTree {
 	tree.normalize = Normalize()
 	return tree
@@ -166,7 +179,7 @@ func (tree *QueryTree) Normalize() *QueryTree {
 // Example1: dqlx.Query(...).Edge("path")
 // Example2: dqlx.Query(...).Edge("parent->child->child")
 // Example3: dqlx.Query(...).Edge("parent->child->child", dqlx.Select(""))
-func (tree *QueryTree) Edge(fullPath string, queryParts ...dqlizer) *QueryTree {
+func (tree *QueryTree) Edge(fullPath string, queryParts ...Dqlizer) *QueryTree {
 	node := &node{}
 
 	last := strings.LastIndex(fullPath, symbolNodeTraversal)
@@ -179,7 +192,7 @@ func (tree *QueryTree) Edge(fullPath string, queryParts ...dqlizer) *QueryTree {
 		name = fullPath[last+2:]
 	}
 
-	node.name = escapePredicate(name)
+	node.name = Escape(name)
 	for _, part := range queryParts {
 		switch cast := part.(type) {
 		case Filter:
@@ -188,9 +201,9 @@ func (tree *QueryTree) Edge(fullPath string, queryParts ...dqlizer) *QueryTree {
 			node.pagination = &cast
 		case *Order:
 			node.order = append(node.order, cast)
-		case *facetsDirective:
+		case *FacetsDirective:
 			node.facets = append(node.facets, Facets(cast.GetValues()...))
-		case *fields:
+		case *Fields:
 			node.fields = Select(cast.predicates...)
 		}
 	}
@@ -202,7 +215,7 @@ func (tree *QueryTree) Edge(fullPath string, queryParts ...dqlizer) *QueryTree {
 
 // EdgeAs adds a new aliased edge
 // Example: dqlx.Query(...).EdgeA s("C", "path", ...)
-func (tree *QueryTree) EdgeAs(varName string, fullPath string, queryParts ...dqlizer) *QueryTree {
+func (tree *QueryTree) EdgeAs(varName string, fullPath string, queryParts ...Dqlizer) *QueryTree {
 	queryTree := tree.Edge(fullPath, queryParts...)
 	queryTree.nodes[fullPath].varName = varName
 	return tree

@@ -7,12 +7,12 @@ import (
 	"time"
 )
 
-func (tree *QueryTree) toDQL() (query string, args []interface{}, err error) {
+func (tree *QueryTree) Dql() (query string, args []interface{}, err error) {
 	var builder strings.Builder
 
 	builder.WriteString(indent(1))
 	if tree.varName != "" {
-		builder.WriteString(escapePredicate(tree.varName) + " AS ")
+		builder.WriteString(Escape(tree.varName) + " AS ")
 	}
 
 	if tree.isVariable {
@@ -26,7 +26,7 @@ func (tree *QueryTree) toDQL() (query string, args []interface{}, err error) {
 	// RootFilter
 	// If rootFilter is nil, then order and pagination should not appear together
 	if tree.rootFilter != nil {
-		partQuery, partArgs, err := tree.rootFilter.toDQL()
+		partQuery, partArgs, err := tree.rootFilter.Dql()
 		if err != nil {
 			return "", nil, err
 		}
@@ -36,7 +36,7 @@ func (tree *QueryTree) toDQL() (query string, args []interface{}, err error) {
 		// Order
 		for _, order := range tree.order {
 			if order != nil {
-				partQuery, partArgs, err := order.toDQL()
+				partQuery, partArgs, err := order.Dql()
 				if err != nil {
 					return "", nil, err
 				}
@@ -46,7 +46,7 @@ func (tree *QueryTree) toDQL() (query string, args []interface{}, err error) {
 		}
 		// Pagination
 		if tree.wantPagination() {
-			partQuery, partArgs, err := tree.pagination.toDQL()
+			partQuery, partArgs, err := tree.pagination.Dql()
 			if err != nil {
 				return "", nil, err
 			}
@@ -59,7 +59,7 @@ func (tree *QueryTree) toDQL() (query string, args []interface{}, err error) {
 
 	// Filter
 	if tree.filter != nil {
-		partQuery, partArgs, err := tree.filter.toDQL()
+		partQuery, partArgs, err := tree.filter.Dql()
 		if err != nil {
 			return "", nil, err
 		}
@@ -68,7 +68,7 @@ func (tree *QueryTree) toDQL() (query string, args []interface{}, err error) {
 	}
 	// Recurse
 	if tree.recurse != nil {
-		partQuery, partArgs, err := tree.recurse.toDQL()
+		partQuery, partArgs, err := tree.recurse.Dql()
 		if err != nil {
 			return "", nil, err
 		}
@@ -78,7 +78,7 @@ func (tree *QueryTree) toDQL() (query string, args []interface{}, err error) {
 	}
 	// Cascade
 	if tree.cascade != nil {
-		partQuery, partArgs, err := tree.cascade.toDQL()
+		partQuery, partArgs, err := tree.cascade.Dql()
 		if err != nil {
 			return "", nil, err
 		}
@@ -88,7 +88,7 @@ func (tree *QueryTree) toDQL() (query string, args []interface{}, err error) {
 	}
 	// Normalize
 	if tree.normalize != nil {
-		partQuery, partArgs, err := tree.normalize.toDQL()
+		partQuery, partArgs, err := tree.normalize.Dql()
 		if err != nil {
 			return "", nil, err
 		}
@@ -100,7 +100,7 @@ func (tree *QueryTree) toDQL() (query string, args []interface{}, err error) {
 	// Select
 	if tree.hasFields() {
 		tree.fields.indentLevel = 2
-		partQuery, partArgs, err := tree.fields.toDQL()
+		partQuery, partArgs, err := tree.fields.Dql()
 		if err != nil {
 			return "", nil, err
 		}
@@ -137,7 +137,7 @@ func (tree *QueryTree) buildRecursively(depth int, path string, builder *strings
 		var orderQueries []string
 		for _, order := range node.order {
 			if order != nil {
-				partQuery, partArgs, err := order.toDQL()
+				partQuery, partArgs, err := order.Dql()
 				if err != nil {
 					return err
 				}
@@ -149,7 +149,7 @@ func (tree *QueryTree) buildRecursively(depth int, path string, builder *strings
 	}
 	// Pagination
 	if node.wantPagination() {
-		partQuery, partArgs, err := node.pagination.toDQL()
+		partQuery, partArgs, err := node.pagination.Dql()
 		if err != nil {
 			return err
 		}
@@ -158,7 +158,7 @@ func (tree *QueryTree) buildRecursively(depth int, path string, builder *strings
 	}
 	// Filter
 	if node.filter != nil {
-		partQuery, partArgs, err := node.filter.toDQL()
+		partQuery, partArgs, err := node.filter.Dql()
 		if err != nil {
 			return err
 		}
@@ -169,7 +169,7 @@ func (tree *QueryTree) buildRecursively(depth int, path string, builder *strings
 	var facetQueries []string
 	for _, facet := range node.facets {
 		if facet != nil {
-			partQuery, partArgs, err := facet.toDQL()
+			partQuery, partArgs, err := facet.Dql()
 			if err != nil {
 				return err
 			}
@@ -186,7 +186,7 @@ func (tree *QueryTree) buildRecursively(depth int, path string, builder *strings
 
 		if hasFields {
 			node.fields.indentLevel = depth + 1
-			fieldQuery, fieldArgs, err := node.fields.toDQL()
+			fieldQuery, fieldArgs, err := node.fields.Dql()
 			if err != nil {
 				return err
 			}
@@ -204,9 +204,9 @@ func (tree *QueryTree) buildRecursively(depth int, path string, builder *strings
 	return nil
 }
 
-// QueriesToDQL returns the DQL statement for 1 or more queries
-// Example: dqlx.QueriesToDQL(query1,query2,query3)
-func QueriesToDQL(queries ...*QueryTree) (query string, variables map[string]string, err error) {
+// ToDql returns the DQL statement for 1 or more queries
+// Example: dqlx.ToDql(query1,query2,query3)
+func ToDql(queries ...*QueryTree) (query string, variables map[string]string, err error) {
 	ensureUniqueQueryNames(queries)
 
 	blockNames := make([]string, len(queries))
@@ -218,7 +218,7 @@ func QueriesToDQL(queries ...*QueryTree) (query string, variables map[string]str
 	statements := make([]string, len(queries))
 	var args []interface{}
 	for i, query := range queries {
-		partQuery, partArgs, err := query.toDQL()
+		partQuery, partArgs, err := query.Dql()
 		if err != nil {
 			return "", nil, err
 		}
@@ -287,7 +287,7 @@ func toVariables(rawVariables map[int]interface{}) (variables map[string]string,
 
 		variables[variableName] = toVariableValue(rawVariables[i])
 
-		placeholders[i] = variableName + ":" + goTypeToDQLType(rawVariables[i])
+		placeholders[i] = variableName + ":" + goTypeDqlType(rawVariables[i])
 	}
 
 	return variables, placeholders
@@ -302,7 +302,7 @@ func toVariableValue(value interface{}) string {
 	}
 }
 
-func goTypeToDQLType(value interface{}) string {
+func goTypeDqlType(value interface{}) string {
 	switch value.(type) {
 	case string:
 		return "string"

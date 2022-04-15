@@ -8,36 +8,36 @@ import (
 	"unicode"
 )
 
-type funcType string
+type FuncType string
 
 var (
-	eq funcType = "eq" // Done
+	eq FuncType = "eq" // Done
 	// ie
-	ge funcType = "ge" // Done
-	gt funcType = "gt" // Done
-	le funcType = "le" // Done
-	lt funcType = "lt" // Done
+	ge FuncType = "ge" // Done
+	gt FuncType = "gt" // Done
+	le FuncType = "le" // Done
+	lt FuncType = "lt" // Done
 
-	has funcType = "has"  // Done
-	typ funcType = "type" // Done
+	has FuncType = "has"  // Done
+	typ FuncType = "type" // Done
 	// term
-	allofterms funcType = "allofterms" // Done
-	anyofterms funcType = "anyofterms" // Done
+	allofterms FuncType = "allofterms" // Done
+	anyofterms FuncType = "anyofterms" // Done
 	// trigram
-	regexp funcType = "regexp" // Done
-	match  funcType = "match"  // Done
+	regexp FuncType = "regexp" // Done
+	match  FuncType = "match"  // Done
 	// fulltext
-	alloftext funcType = "alloftext" // Done
-	anyoftext funcType = "anyoftext" // Done
+	alloftext FuncType = "alloftext" // Done
+	anyoftext FuncType = "anyoftext" // Done
 
-	between funcType = "between" // Done
-	uid     funcType = "uid"     // Done
-	uidIn   funcType = "uid_in"  // Done
+	between FuncType = "between" // Done
+	uid     FuncType = "uid"     // Done
+	uidIn   FuncType = "uid_in"  // Done
 )
 
 type Filter interface {
-	dqlizer
-	Type() funcType
+	Dqlizer
+	Type() FuncType
 }
 
 type eqExpr struct {
@@ -45,21 +45,21 @@ type eqExpr struct {
 	values []interface{}
 }
 
-func (eqExpr *eqExpr) toDQL() (query string, args []interface{}, err error) {
+func (eqExpr *eqExpr) Dql() (string, []interface{}, error) {
 	if len(eqExpr.values) == 0 {
 		return "", nil, fmt.Errorf("eq should have one value at least")
 	}
 
 	var key string
-	switch keyCast := eqExpr.key.(type) {
+	switch cast := eqExpr.key.(type) {
 	case string:
-		key = escapePredicate(keyCast)
-	case *valExpr:
-		key = keyCast.String()
-	case *countExpr:
-		key = keyCast.String()
+		key = Escape(cast)
+	case *ValExpr:
+		key = cast.String()
+	case *CountExpr:
+		key = cast.String()
 	default:
-		return "", nil, fmt.Errorf("eq accepts only string, val() or count() as value, given %T", keyCast)
+		return "", nil, fmt.Errorf("eq accepts only string, val() or count() as value, given %T", cast)
 	}
 
 	placeholders := make([]string, len(eqExpr.values))
@@ -67,13 +67,10 @@ func (eqExpr *eqExpr) toDQL() (query string, args []interface{}, err error) {
 		placeholders[i] = symbolValuePlaceholder
 	}
 
-	query = string(eqExpr.Type()) + "(" + key + "," +
-		strings.Join(placeholders, ",") + ")"
-
-	return query, eqExpr.values, nil
+	return string(eqExpr.Type()) + "(" + key + "," + strings.Join(placeholders, ",") + ")", eqExpr.values, nil
 }
 
-func (eqExpr *eqExpr) Type() funcType {
+func (eqExpr *eqExpr) Type() FuncType {
 	return eq
 }
 
@@ -88,31 +85,28 @@ func Eq(key interface{}, values ...interface{}) *eqExpr {
 }
 
 type ie struct {
-	ieType funcType
+	ieType FuncType
 	key    interface{}
 	value  interface{}
 }
 
-func (ie *ie) toDQL() (query string, args []interface{}, err error) {
+func (ie *ie) Dql() (string, []interface{}, error) {
 	var key string
-	switch keyCast := ie.key.(type) {
+	switch cast := ie.key.(type) {
 	case string:
-		key = escapePredicate(keyCast)
-	case *valExpr:
-		key = keyCast.String()
-	case *countExpr:
-		key = keyCast.String()
+		key = Escape(cast)
+	case *ValExpr:
+		key = cast.String()
+	case *CountExpr:
+		key = cast.String()
 	default:
-		return "", nil, fmt.Errorf("ie accepts only string, val() or count() as value, given %T", keyCast)
+		return "", nil, fmt.Errorf("ie accepts only string, val() or count() as value, given %T", cast)
 	}
 
-	query = string(ie.Type()) + "(" + key + "," +
-		symbolValuePlaceholder + ")"
-
-	return query, []interface{}{ie.value}, nil
+	return string(ie.Type()) + "(" + key + "," + symbolValuePlaceholder + ")", []interface{}{ie.value}, nil
 }
 
-func (ie *ie) Type() funcType {
+func (ie *ie) Type() FuncType {
 	return ie.ieType
 }
 
@@ -160,13 +154,11 @@ type hasExpr struct {
 	predicate string
 }
 
-func (hasExpr *hasExpr) toDQL() (query string, args []interface{}, err error) {
-	query = string(hasExpr.Type()) + "(" + escapePredicate(hasExpr.predicate) + ")"
-
-	return query, args, nil
+func (hasExpr *hasExpr) Dql() (string, []interface{}, error) {
+	return string(hasExpr.Type()) + "(" + Escape(hasExpr.predicate) + ")", nil, nil
 }
 
-func (hasExpr *hasExpr) Type() funcType {
+func (hasExpr *hasExpr) Type() FuncType {
 	return has
 }
 
@@ -182,13 +174,11 @@ type typeExpr struct {
 	dgraphType string
 }
 
-func (typeExpr *typeExpr) toDQL() (query string, args []interface{}, err error) {
-	query = string(typeExpr.Type()) + "(" + symbolValuePlaceholder + ")"
-
-	return query, []interface{}{typeExpr.dgraphType}, nil
+func (typeExpr *typeExpr) Dql() (string, []interface{}, error) {
+	return string(typeExpr.Type()) + "(" + symbolValuePlaceholder + ")", []interface{}{typeExpr.dgraphType}, nil
 }
 
-func (typeExpr *typeExpr) Type() funcType {
+func (typeExpr *typeExpr) Type() FuncType {
 	return typ
 }
 
@@ -201,19 +191,17 @@ func Type(dgraphType string) *typeExpr {
 }
 
 type term struct {
-	termType  funcType
+	termType  FuncType
 	predicate string
 	terms     string
 }
 
-func (term *term) toDQL() (query string, args []interface{}, err error) {
-	query = string(term.Type()) + "(" + escapePredicate(term.predicate) +
-		"," + symbolValuePlaceholder + ")"
-
-	return query, []interface{}{term.terms}, nil
+func (term *term) Dql() (string, []interface{}, error) {
+	return string(term.Type()) + "(" + Escape(term.predicate) +
+		"," + symbolValuePlaceholder + ")", []interface{}{term.terms}, nil
 }
 
-func (term *term) Type() funcType {
+func (term *term) Type() FuncType {
 	return term.termType
 }
 
@@ -238,19 +226,17 @@ func AnyOfTerms(predicate string, terms string) *term {
 }
 
 type trigram struct {
-	trigramType funcType
+	trigramType FuncType
 	predicate   string
 	pattern     string
 }
 
-func (trigram *trigram) toDQL() (query string, args []interface{}, err error) {
-	query = string(trigram.Type()) + "(" + escapePredicate(trigram.predicate) +
-		"," + symbolValuePlaceholder + ")"
-
-	return query, []interface{}{trigram.pattern}, nil
+func (trigram *trigram) Dql() (string, []interface{}, error) {
+	return string(trigram.Type()) + "(" + Escape(trigram.predicate) +
+		"," + symbolValuePlaceholder + ")", []interface{}{trigram.pattern}, nil
 }
 
-func (trigram *trigram) Type() funcType {
+func (trigram *trigram) Type() FuncType {
 	return trigram.trigramType
 }
 
@@ -273,15 +259,14 @@ type matchExpr struct {
 	distance int
 }
 
-func (matchExpr *matchExpr) toDQL() (query string, args []interface{}, err error) {
+func (matchExpr *matchExpr) Dql() (string, []interface{}, error) {
 	placeholders := make([]string, 2)
 	for i := 0; i < len(placeholders); i++ {
 		placeholders[i] = symbolValuePlaceholder
 	}
-	query = string(matchExpr.Type()) + "(" + escapePredicate(matchExpr.predicate) + "," +
-		strings.Join(placeholders, ",") + ")"
 
-	return query, []interface{}{matchExpr.pattern, matchExpr.distance}, nil
+	return string(matchExpr.Type()) + "(" + Escape(matchExpr.predicate) + "," +
+		strings.Join(placeholders, ",") + ")", []interface{}{matchExpr.pattern, matchExpr.distance}, nil
 }
 
 // Match represents the match expression,
@@ -298,19 +283,17 @@ func Match(predicate string, pattern string, distance int) *matchExpr {
 }
 
 type fulltext struct {
-	fulltextType funcType
+	fulltextType FuncType
 	predicate    string
 	text         string
 }
 
-func (fulltext *fulltext) toDQL() (query string, args []interface{}, err error) {
-	query = string(fulltext.Type()) + "(" + escapePredicate(fulltext.predicate) + "," +
-		symbolValuePlaceholder + ")"
-
-	return query, []interface{}{fulltext.text}, nil
+func (fulltext *fulltext) Dql() (string, []interface{}, error) {
+	return string(fulltext.Type()) + "(" + Escape(fulltext.predicate) + "," +
+		symbolValuePlaceholder + ")", []interface{}{fulltext.text}, nil
 }
 
-func (fulltext *fulltext) Type() funcType {
+func (fulltext *fulltext) Type() FuncType {
 	return fulltext.fulltextType
 }
 
@@ -340,18 +323,17 @@ type betweenExpr struct {
 	upperbound interface{}
 }
 
-func (betweenExpr *betweenExpr) toDQL() (query string, args []interface{}, err error) {
+func (betweenExpr *betweenExpr) Dql() (string, []interface{}, error) {
 	placeholders := make([]string, 2)
 	for i := 0; i < len(placeholders); i++ {
 		placeholders[i] = symbolValuePlaceholder
 	}
-	query = string(betweenExpr.Type()) + "(" + escapePredicate(betweenExpr.predicate) + "," +
-		strings.Join(placeholders, ",") + ")"
 
-	return query, []interface{}{betweenExpr.lowerbound, betweenExpr.upperbound}, nil
+	return string(betweenExpr.Type()) + "(" + Escape(betweenExpr.predicate) + "," +
+		strings.Join(placeholders, ",") + ")", []interface{}{betweenExpr.lowerbound, betweenExpr.upperbound}, nil
 }
 
-func (betweenExpr *betweenExpr) Type() funcType {
+func (betweenExpr *betweenExpr) Type() FuncType {
 	return between
 }
 
@@ -369,24 +351,23 @@ type uidExpr struct {
 	values []string
 }
 
-func (uidExpr *uidExpr) toDQL() (query string, args []interface{}, err error) {
+func (uidExpr *uidExpr) Dql() (string, []interface{}, error) {
 	placeholders := make([]string, len(uidExpr.values))
 
 	for i := 0; i < len(placeholders); i++ {
-		// Suppose that variables begin with uppercase letters, and use this strange method for the time being
+		// Suppose that variables begin with uppercase letters
 		isStartUpper := unicode.IsUpper([]rune(uidExpr.values[i])[0])
 		if isStartUpper {
-			placeholders[i] = escapePredicate(uidExpr.values[i])
+			placeholders[i] = Escape(uidExpr.values[i])
 		} else {
 			placeholders[i] = uidExpr.values[i]
 		}
 	}
-	query = string(uidExpr.Type()) + "(" + strings.Join(placeholders, ",") + ")"
 
-	return query, args, nil
+	return string(uidExpr.Type()) + "(" + strings.Join(placeholders, ",") + ")", nil, nil
 }
 
-func (uidExpr *uidExpr) Type() funcType {
+func (uidExpr *uidExpr) Type() FuncType {
 	return uid
 }
 
@@ -403,15 +384,14 @@ type uidInExpr struct {
 	value     interface{}
 }
 
-func (uidInExpr *uidInExpr) toDQL() (query string, args []interface{}, err error) {
+func (uidInExpr *uidInExpr) Dql() (string, []interface{}, error) {
+	var (
+		args []interface{}
+	)
+
 	valVal := reflect.ValueOf(uidInExpr.value)
-	isListType := valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice
-
-	if isListType {
-		var listValue []interface{}
-
-		listValue, err = toInterfaceSlice(uidInExpr.value)
-
+	if valVal.Kind() == reflect.Array || valVal.Kind() == reflect.Slice {
+		listValue, err := toInterfaceSlice(uidInExpr.value)
 		if err != nil {
 			return "", nil, err
 		}
@@ -421,19 +401,16 @@ func (uidInExpr *uidInExpr) toDQL() (query string, args []interface{}, err error
 			placeholders[index] = symbolValuePlaceholder
 			args = append(args, value)
 		}
-		query = string(uidInExpr.Type()) + "(" + escapePredicate(uidInExpr.predicate) + ",[" +
-			strings.Join(placeholders, ",") + "])"
 
-		return
+		return string(uidInExpr.Type()) + "(" + Escape(uidInExpr.predicate) + ",[" +
+			strings.Join(placeholders, ",") + "])", args, nil
 	}
 
-	query = string(uidInExpr.Type()) + "(" + escapePredicate(uidInExpr.predicate) + "," +
-		symbolValuePlaceholder + ")"
-
-	return query, []interface{}{uidInExpr.value}, nil
+	return string(uidInExpr.Type()) + "(" + Escape(uidInExpr.predicate) + "," +
+		symbolValuePlaceholder + ")", []interface{}{uidInExpr.value}, nil
 }
 
-func (uidInExpr *uidInExpr) Type() funcType {
+func (uidInExpr *uidInExpr) Type() FuncType {
 	return uidIn
 }
 
@@ -471,33 +448,31 @@ type conjunction struct {
 	connector string
 }
 
-func (conjunction *conjunction) toDQL() (query string, args []interface{}, err error) {
-	if len(conjunction.filters) == 0 {
-		return "", args, nil
-	}
-
-	var filters []string
+func (conjunction *conjunction) Dql() (string, []interface{}, error) {
+	var (
+		filters []string
+		args    []interface{}
+	)
 	for _, part := range conjunction.filters {
-		partDql, partArgs, err := part.toDQL()
+		partQ, partArgs, err := part.Dql()
 		if err != nil {
 			return "", nil, err
 		}
-		if partDql != "" {
-			filters = append(filters, partDql)
+		if partQ != "" {
+			filters = append(filters, partQ)
 			args = append(args, partArgs...)
 		}
 	}
 
-	filterNum := len(filters)
-	if filterNum == 1 {
-		query = filters[0]
-	} else if filterNum > 1 {
-		query = "(" + strings.Join(filters, conjunction.connector) + ")"
+	if len(filters) == 1 {
+		return filters[0], args, nil
+	} else if len(filters) > 1 {
+		return "(" + strings.Join(filters, conjunction.connector) + ")", args, nil
 	}
 
-	return query, args, nil
+	return "", nil, nil
 }
-func (conjunction *conjunction) Type() funcType {
+func (conjunction *conjunction) Type() FuncType {
 	return "conjunction"
 }
 
@@ -519,18 +494,16 @@ type notExpr struct {
 	filter Filter
 }
 
-func (notExpr *notExpr) toDQL() (query string, args []interface{}, err error) {
-	filterDql, filterArgs, err := notExpr.filter.toDQL()
+func (notExpr *notExpr) Dql() (string, []interface{}, error) {
+	q, args, err := notExpr.filter.Dql()
 	if err != nil {
 		return "", nil, err
 	}
 
-	query = "NOT " + filterDql
-
-	return query, filterArgs, nil
+	return "NOT " + q, args, nil
 }
 
-func (notExpr *notExpr) Type() funcType {
+func (notExpr *notExpr) Type() FuncType {
 	return "not"
 }
 

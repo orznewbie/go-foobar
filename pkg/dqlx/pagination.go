@@ -4,13 +4,16 @@ import "strings"
 
 // Cursor represents pagination parameters
 type Cursor struct {
-	First  int
-	Offset int
+	First  int64
+	Offset int64
 	After  string
 }
 
-func (p Cursor) toDQL() (query string, args []interface{}, err error) {
-	var paginationExpressions []string
+func (p Cursor) Dql() (string, []interface{}, error) {
+	var (
+		paginationExpressions []string
+		args                  []interface{}
+	)
 	if p.First != 0 {
 		paginationExpressions = append(paginationExpressions, "first: "+symbolValuePlaceholder)
 		args = append(args, p.First)
