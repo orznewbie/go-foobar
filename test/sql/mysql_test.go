@@ -19,7 +19,7 @@ func mysqlDB() *sql.DB {
 
 func TestConn(t *testing.T) {
 	DB := mysqlDB()
-	//验证连接
+
 	if err := DB.Ping(); err != nil {
 		t.Fatal(err)
 	}
