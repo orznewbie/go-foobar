@@ -1,1 +1,1 @@
-# gotest
+# Golang Template

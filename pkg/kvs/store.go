@@ -3,7 +3,7 @@ package kvs
 import (
 	"context"
 	"fmt"
-	"huhaolong.com/gotest/x/kvs/driver"
+	"github.com/orznewbie/gotmpl/pkg/kvs/driver"
 	"net/url"
 	"strings"
 	"time"

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"huhaolong.com/gotest/x/kvs/driver"
+	"github.com/orznewbie/gotmpl/pkg/kvs/driver"
 	"sync"
 	"testing"
 )

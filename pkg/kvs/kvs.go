@@ -2,9 +2,9 @@ package kvs
 
 import (
 	"context"
+	"github.com/orznewbie/gotmpl/pkg/kvs/driver"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"huhaolong.com/gotest/x/kvs/driver"
 	"strings"
 	"sync"
 )

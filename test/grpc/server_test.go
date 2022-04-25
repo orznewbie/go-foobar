@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"github.com/orznewbie/gotest/grpc/api/test"
+	"github.com/orznewbie/gotmpl/test/grpc/pb"
 	"google.golang.org/grpc"
 	"io"
 	"net"
@@ -12,23 +12,23 @@ import (
 )
 
 type CalculateServiceImpl struct {
-	test.UnimplementedCalculateServiceServer
+	pb.UnimplementedCalculateServiceServer
 }
 
-func (c CalculateServiceImpl) Sum(ctx context.Context, input *test.Input) (*test.Output, error) {
+func (c CalculateServiceImpl) Sum(ctx context.Context, input *pb.Input) (*pb.Output, error) {
 	var result = 0
 	for i := 1; i <= int(input.Num); i++ {
 		result += i
 	}
-	return &test.Output{Result: int64(result)}, nil
+	return &pb.Output{Result: int64(result)}, nil
 }
 
-func (c CalculateServiceImpl) Multi(stream test.CalculateService_MultiServer) error {
+func (c CalculateServiceImpl) Multi(stream pb.CalculateService_MultiServer) error {
 	var result int64 = 1
 	for {
 		input, err := stream.Recv()
 		if err == io.EOF {
-			stream.SendAndClose(&test.Output{Result: result})
+			stream.SendAndClose(&pb.Output{Result: result})
 			time.Sleep(time.Hour)
 			return nil
 		}
@@ -41,9 +41,9 @@ func (c CalculateServiceImpl) Multi(stream test.CalculateService_MultiServer) er
 	}
 }
 
-func (c CalculateServiceImpl) Repeat(input *test.Input, stream test.CalculateService_RepeatServer) error {
+func (c CalculateServiceImpl) Repeat(input *pb.Input, stream pb.CalculateService_RepeatServer) error {
 	for i := 1; i <= int(input.Num); i++ {
-		if err := stream.Send(&test.Output{Result: int64(i * 10)}); err != nil {
+		if err := stream.Send(&pb.Output{Result: int64(i * 10)}); err != nil {
 			fmt.Println("hello world")
 			return err
 		}
@@ -54,9 +54,9 @@ func (c CalculateServiceImpl) Repeat(input *test.Input, stream test.CalculateSer
 func TestCalculateService(t *testing.T) {
 	srv := grpc.NewServer()
 	impl := CalculateServiceImpl{}
-	test.RegisterCalculateServiceServer(srv, impl)
+	pb.RegisterCalculateServiceServer(srv, impl)
 
-	lis, err := net.Listen("tcp", "127.0.0.1:223")
+	lis, err := net.Listen("tcp", ServerAddr)
 	if err != nil {
 		t.Fatal(err)
 	}

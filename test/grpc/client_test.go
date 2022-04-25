@@ -3,23 +3,25 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"github.com/orznewbie/gotest/grpc/api/test"
+	"github.com/orznewbie/gotmpl/test/grpc/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
 	"testing"
 )
 
+var ServerAddr = "127.0.0.1:223"
+
 func TestSum(t *testing.T) {
-	cc, err := grpc.Dial("127.0.0.1:223", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	cc, err := grpc.Dial(ServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer cc.Close()
 
-	clt := test.NewCalculateServiceClient(cc)
+	clt := pb.NewCalculateServiceClient(cc)
 
-	output, err := clt.Sum(context.TODO(), &test.Input{Num: 15})
+	output, err := clt.Sum(context.TODO(), &pb.Input{Num: 15})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,20 +30,20 @@ func TestSum(t *testing.T) {
 }
 
 func TestMulti(t *testing.T) {
-	cc, err := grpc.Dial("127.0.0.1:223", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	cc, err := grpc.Dial(ServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer cc.Close()
 
-	clt := test.NewCalculateServiceClient(cc)
+	clt := pb.NewCalculateServiceClient(cc)
 
 	stream, err := clt.Multi(context.TODO())
 	if err != nil {
 		t.Fatal(err)
 	}
 	for i := 1; i <= 3; i++ {
-		if err := stream.Send(&test.Input{Num: int32(i)}); err != nil {
+		if err := stream.Send(&pb.Input{Num: int32(i)}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -55,15 +57,15 @@ func TestMulti(t *testing.T) {
 }
 
 func TestRepeat(t *testing.T) {
-	cc, err := grpc.Dial("127.0.0.1:223", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	cc, err := grpc.Dial(ServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer cc.Close()
 
-	clt := test.NewCalculateServiceClient(cc)
+	clt := pb.NewCalculateServiceClient(cc)
 
-	stream, err := clt.Repeat(context.TODO(), &test.Input{Num: int32(10)})
+	stream, err := clt.Repeat(context.TODO(), &pb.Input{Num: int32(10)})
 	if err != nil {
 		t.Fatal(err)
 	}

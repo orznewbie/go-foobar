@@ -2,8 +2,8 @@ package file
 
 import (
 	"context"
-	"huhaolong.com/gotest/x/kvs"
-	"huhaolong.com/gotest/x/kvs/driver"
+	"github.com/orznewbie/gotmpl/pkg/kvs"
+	"github.com/orznewbie/gotmpl/pkg/kvs/driver"
 	"io/ioutil"
 	"os"
 	"path/filepath"
