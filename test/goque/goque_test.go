@@ -3,6 +3,7 @@ package goque
 import (
 	"fmt"
 	"github.com/beeker1121/goque"
+	"github.com/orznewbie/gotmpl/pkg/log"
 	"testing"
 )
 
@@ -34,4 +35,30 @@ func TestQueue(t *testing.T) {
 	peek, _ := q.Peek()
 	fmt.Println(peek.ToString())
 	defer q.Close()
+}
+
+type (
+	Request struct {
+		Query string
+	}
+
+	Alter struct {
+		Schema string
+	}
+)
+
+func TestObjectQueue(t *testing.T) {
+	req := Request{Query: "query{}"}
+	alter := Alter{Schema: "type{}"}
+
+	q, _ := goque.OpenQueue("object_dir")
+	//q.EnqueueObject(req)
+	//q.EnqueueObject(alter)
+
+	peek, _ := q.Peek()
+	peek.ToObject(&req)
+	log.Info(req)
+	peek, _ = q.Peek()
+	peek.ToObject(&alter)
+	log.Info(alter)
 }
