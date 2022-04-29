@@ -2,84 +2,85 @@ package grpc
 
 import (
 	"context"
-	"fmt"
-	"github.com/orznewbie/gotmpl/test/grpc/pb"
+	testpb "github.com/orznewbie/gotmpl/api/test"
+	"github.com/orznewbie/gotmpl/pkg/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
+	"strconv"
 	"testing"
+	"time"
 )
 
 var ServerAddr = "127.0.0.1:223"
 
-func TestSum(t *testing.T) {
+func NewDataClient() (testpb.DataServiceClient, *grpc.ClientConn) {
 	cc, err := grpc.Dial(ServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
-	defer cc.Close()
-
-	clt := pb.NewCalculateServiceClient(cc)
-
-	output, err := clt.Sum(context.TODO(), &pb.Input{Num: 15})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Println(output)
+	return testpb.NewDataServiceClient(cc), cc
 }
 
-func TestMulti(t *testing.T) {
-	cc, err := grpc.Dial(ServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		t.Fatal(err)
-	}
+func TestGetFile(t *testing.T) {
+	clt, cc := NewDataClient()
 	defer cc.Close()
 
-	clt := pb.NewCalculateServiceClient(cc)
-
-	stream, err := clt.Multi(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	time.Sleep(time.Second*1)
+	file, err := clt.GetFile(ctx, &testpb.Input{Name: "file0"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	for i := 1; i <= 3; i++ {
-		if err := stream.Send(&pb.Input{Num: int32(i)}); err != nil {
+
+	log.Info(file.Id, file.Content)
+}
+
+func TestUpload(t *testing.T) {
+	clt, cc := NewDataClient()
+	defer cc.Close()
+
+	stream, err := clt.Upload(context.TODO())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 3; i++ {
+		if err := stream.Send(&testpb.Data{
+			Id:      "file" + strconv.Itoa(i),
+			Content: "movie data fragment"+ strconv.Itoa(i),
+		}); err != nil {
 			t.Fatal(err)
 		}
 	}
 
+	// 服务端流需要主动关闭流，发送一个EOF信号
 	result, err := stream.CloseAndRecv()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	fmt.Println("客户端", result)
+	log.Info(result)
 }
 
-func TestRepeat(t *testing.T) {
-	cc, err := grpc.Dial(ServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		t.Fatal(err)
-	}
+func TestDownload(t *testing.T) {
+	clt, cc := NewDataClient()
 	defer cc.Close()
 
-	clt := pb.NewCalculateServiceClient(cc)
-
-	stream, err := clt.Repeat(context.TODO(), &pb.Input{Num: int32(10)})
+	stream, err := clt.Download(context.TODO(), &testpb.Input{Name: "file0"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for {
-		output, err := stream.Recv()
+		data, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
-
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		fmt.Println(output)
+		log.Info(data)
 	}
 }

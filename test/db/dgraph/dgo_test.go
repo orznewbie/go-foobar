@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"testing"
+	"time"
 )
 
 func dgoClient() (*dgo.Dgraph, *grpc.ClientConn) {
@@ -165,4 +166,36 @@ func TestMutate(t *testing.T) {
 
 	log.Info(resp)
 
+}
+
+func TestTx(t *testing.T) {
+	dg, cc := dgoClient()
+	defer cc.Close()
+
+	txA := dg.NewTxn()
+	time.Sleep(time.Second*2)
+	txB := dg.NewTxn()
+
+	resp, err := txA.Mutate(context.TODO(), &api.Mutation{
+		SetNquads:  []byte(`<0xc351> <name> "AAA" .`),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	log.Info("txA: ", resp.Txn)
+
+	resp, err = txB.Mutate(context.TODO(), &api.Mutation{
+		SetNquads:  []byte(`<0xc351> <name> "BBB" .`),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	log.Info("txB: ", resp.Txn)
+
+	if err := txA.Commit(context.TODO()); err != nil {
+		log.Error(err)
+	}
+	if err := txB.Commit(context.TODO()); err != nil {
+		log.Error(err)
+	}
 }

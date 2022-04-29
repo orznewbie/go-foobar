@@ -73,27 +73,22 @@ func TestDgraphQuery(t *testing.T) {
 }
 
 // Mutate和Upsert都是调用的Query接口
-func TestDgraphMutate(t *testing.T) {
+func testDgraphMutate(t *testing.T) (tx *api.TxnContext) {
 	dc, cc := dgraphClient()
 	defer cc.Close()
-
-	quad1 := `
-	<0xc351> <name> "zzz" .
-	`
 
 	// CommitNow以Request的为准
 	// Request.CommitNow=true，则无论Mutation.CommitNow是啥，都会Mutate成功
 	// Request.CommitNow=false，则无论Mutation.CommitNow是啥，在Commit之后都会Mutate成功
-
+	//
 	// Request.CommitNow=false的事务会被保存在Dgraph，我们可以根据Response.Txn拿到这个事务，在之后进行Commit或Abort
 	// Txn.StartTs是事务的开始时间戳，也是事务的唯一标识
 	resp, err := dc.Query(context.Background(), &api.Request{
 		StartTs:    0,
-		BestEffort: false,
 		Mutations: []*api.Mutation{
 			{
-				SetNquads: []byte(quad1),
-				CommitNow: true,
+				SetNquads: []byte(`<0xc351> <name> "ttt" .`),
+				CommitNow: false,
 			},
 			//{
 			//	SetNquads:  []byte(quad2),
@@ -106,8 +101,9 @@ func TestDgraphMutate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	log.Info(resp)
+
+	return resp.Txn
 }
 
 func TestDgraphCheckVersion(t *testing.T) {
@@ -126,21 +122,23 @@ func TestDgraphTx(t *testing.T) {
 	dc, cc := dgraphClient()
 	defer cc.Close()
 
+	tx1 := testDgraphMutate(t)
+	tx2 := testDgraphMutate(t)
+
 	// 未提交的事务可以在这里提交
-	// 事务1：81113 xxx
-	// 事务2：81115 xxx
-	// 事务3：81117 yyy
-	txCtx, err := dc.CommitOrAbort(context.Background(), &api.TxnContext{
-		StartTs:  81277,
-		CommitTs: 0,
-		Aborted:  true,
-		Keys:     nil,
-		Preds:    nil,
-		Hash:     "",
-	})
+	// 事务1：85786 bbb
+	// 事务2：85788 ttt
+	txCtx, err := dc.CommitOrAbort(context.Background(), tx2)
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Log("tx2 ok")
+
+	txCtx, err = dc.CommitOrAbort(context.Background(), tx1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("tx1 ok")
 
 	log.Info(txCtx)
 }

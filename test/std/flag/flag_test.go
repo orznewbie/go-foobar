@@ -1,25 +1,26 @@
-package main
+package flag
 
 import (
 	"flag"
 	"github.com/naoina/toml"
 	"github.com/orznewbie/gotmpl/pkg/log"
 	"os"
+	"testing"
 )
-
-func main() {
-	flag.Parse()
-
-	cfg, err := LoadConfigFile(*configFile)
-	if err != nil {
-		panic(err)
-	}
-	log.Info(cfg)
-}
 
 var (
 	configFile = flag.String("config", "../../../configs/config.toml", "Configuration file to use")
 )
+
+func TestFlag(t *testing.T) {
+	flag.Parse()
+
+	cfg, err := LoadConfigFile(*configFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	log.Info(cfg)
+}
 
 // LoadConfigFile parses the specified file into a Config object
 func LoadConfigFile(filename string) (cfg Config, err error) {

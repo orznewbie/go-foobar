@@ -3,12 +3,14 @@ module github.com/orznewbie/gotmpl
 go 1.16
 
 require (
-	github.com/ClickHouse/clickhouse-go v1.5.4 // indirect
 	github.com/beeker1121/goque v2.1.0+incompatible
 	github.com/dgraph-io/dgo/v210 v210.0.0-20211129111319-4c8247ebe697
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/mailru/easyjson v0.7.7
+	github.com/naoina/go-stringutil v0.1.0 // indirect
+	github.com/naoina/toml v0.1.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
@@ -18,7 +20,7 @@ require (
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb // indirect
+	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
