@@ -4,61 +4,68 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"github.com/orznewbie/gotmpl/pkg/log"
+)
+
+var (
+	dogCh = make(chan struct{})
+	fishCh = make(chan struct{})
+	catCh = make(chan struct{})
+	wg sync.WaitGroup
+	num uint32 = 2
 )
 
 func main() {
-	var (
-		dogCh = make(chan struct{})
-		fishCh = make(chan struct{})
-		catCh = make(chan struct{})
-		wg sync.WaitGroup
-	)
 	wg.Add(3)
-	go dog(&wg, catCh, dogCh)
-	go fish(&wg, dogCh, fishCh)
-	go cat(&wg, fishCh, catCh)
+	go dog()
+	go fish()
+	go cat()
 	catCh <- struct{}{}
 	wg.Wait()
 }
 
-func dog(wg *sync.WaitGroup, catCh, dogCh chan struct{}) {
-	var counter int32
+func dog() {
+	var counter uint32
 	for {
-		if counter >= 100 {
+		if counter >= num {
+			log.Info("dog done.")
 			wg.Done()
+			<- catCh
 			return
 		}
 		<- catCh
 		fmt.Println("dog")
-		atomic.AddInt32(&counter, 1)
+		atomic.AddUint32(&counter, 1)
 		dogCh <- struct{}{}
 	}
 }
 
-func fish(wg *sync.WaitGroup, dogCh, fishCh chan struct{}) {
-	var counter int32
+func fish() {
+	var counter uint32
 	for {
-		if counter >= 100 {
+		if counter >= num {
+			log.Info("fish done.")
 			wg.Done()
 			return
 		}
 		<- dogCh
 		fmt.Println("fish")
-		atomic.AddInt32(&counter, 1)
+		atomic.AddUint32(&counter, 1)
 		fishCh <- struct{}{}
 	}
 }
 	
-func cat(wg *sync.WaitGroup, fishCh, catCh chan struct{}) {
-	var counter int32
+func cat() {
+	var counter uint32
 	for {
-		if counter >= 100 {
+		if counter >= num {
+			log.Info("cat done.")
 			wg.Done()
 			return
 		}
 		<- fishCh
 		fmt.Println("cat")
-		atomic.AddInt32(&counter, 1)
+		atomic.AddUint32(&counter, 1)
 		catCh <- struct{}{}
 	}
 }
