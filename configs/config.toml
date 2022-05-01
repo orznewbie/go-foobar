@@ -1,0 +1,5 @@
+
+[[rpc]]
+name = "dgraph-rpc"
+bind-addr = "0.0.0.0:18888"
+buffer-dir = "./"

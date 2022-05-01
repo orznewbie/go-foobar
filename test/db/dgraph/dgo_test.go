@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"github.com/dgraph-io/dgo/v210"
 	"github.com/dgraph-io/dgo/v210/protos/api"
+	"github.com/orznewbie/gotmpl/pkg/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"testing"
+	"time"
 )
 
-func dgraphClient() (*dgo.Dgraph, *grpc.ClientConn) {
+func dgoClient() (*dgo.Dgraph, *grpc.ClientConn) {
 	cc, err := grpc.Dial("192.168.30.58:29080", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
@@ -23,7 +25,7 @@ func dgraphClient() (*dgo.Dgraph, *grpc.ClientConn) {
 }
 
 func TestDropType(t *testing.T) {
-	dg, cc := dgraphClient()
+	dg, cc := dgoClient()
 	defer cc.Close()
 
 	if err := dg.Alter(context.Background(), &api.Operation{
@@ -34,7 +36,7 @@ func TestDropType(t *testing.T) {
 }
 
 func TestDropData(t *testing.T) {
-	dg, cc := dgraphClient()
+	dg, cc := dgoClient()
 	defer cc.Close()
 
 	if err := dg.Alter(context.Background(), &api.Operation{
@@ -45,7 +47,7 @@ func TestDropData(t *testing.T) {
 }
 
 func TestDropPred(t *testing.T) {
-	dg, cc := dgraphClient()
+	dg, cc := dgoClient()
 	defer cc.Close()
 
 	dropAttr := `dtdl:test:Room::area dtdl:test:Room::room_number`
@@ -77,7 +79,7 @@ func TestDropPred(t *testing.T) {
 }
 
 func TestAddNoconflictSchema(t *testing.T) {
-	dg, cc := dgraphClient()
+	dg, cc := dgoClient()
 	defer cc.Close()
 
 	op := &api.Operation{}
@@ -91,7 +93,7 @@ func TestAddNoconflictSchema(t *testing.T) {
 }
 
 func TestQueryRDF(t *testing.T) {
-	dg, cc := dgraphClient()
+	dg, cc := dgoClient()
 	defer cc.Close()
 
 	q := `
@@ -111,7 +113,7 @@ func TestQueryRDF(t *testing.T) {
 }
 
 func TestQuerySchema(t *testing.T) {
-	dg, cc := dgraphClient()
+	dg, cc := dgoClient()
 	defer cc.Close()
 
 	q := `schema(type: <dtdl:test:Room;1>) {}`
@@ -124,7 +126,7 @@ func TestQuerySchema(t *testing.T) {
 }
 
 func TestQuery(t *testing.T) {
-	dg, cc := dgraphClient()
+	dg, cc := dgoClient()
 	defer cc.Close()
 
 	q := `
@@ -139,4 +141,61 @@ func TestQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println(string(resp.Json))
+}
+
+func TestMutate(t *testing.T) {
+	dg, cc := dgoClient()
+	defer cc.Close()
+
+	quad := `
+	_:user <name> "lisi" .
+	_:user <age> "35" .
+	_:user <dgraph.type> "User" .
+	`
+
+	tx := dg.NewTxn()
+	resp, err := tx.Mutate(context.Background(), &api.Mutation{
+		SetNquads: []byte(quad),
+		CommitNow: false,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx.Commit(context.Background())
+
+	log.Info(resp)
+
+}
+
+func TestTx(t *testing.T) {
+	dg, cc := dgoClient()
+	defer cc.Close()
+
+	txA := dg.NewTxn()
+	time.Sleep(time.Second*2)
+	txB := dg.NewTxn()
+
+	resp, err := txA.Mutate(context.TODO(), &api.Mutation{
+		SetNquads:  []byte(`<0xc351> <name> "AAA" .`),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	log.Info("txA: ", resp.Txn)
+
+	resp, err = txB.Mutate(context.TODO(), &api.Mutation{
+		SetNquads:  []byte(`<0xc351> <name> "BBB" .`),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	log.Info("txB: ", resp.Txn)
+
+	if err := txA.Commit(context.TODO()); err != nil {
+		log.Error(err)
+	}
+	if err := txB.Commit(context.TODO()); err != nil {
+		log.Error(err)
+	}
 }
