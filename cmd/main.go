@@ -2,17 +2,17 @@ package main
 
 import (
 	"fmt"
+	"github.com/orznewbie/gotmpl/pkg/log"
 	"sync"
 	"sync/atomic"
-	"github.com/orznewbie/gotmpl/pkg/log"
 )
 
 var (
-	dogCh = make(chan struct{})
+	dogCh  = make(chan struct{})
 	fishCh = make(chan struct{})
-	catCh = make(chan struct{})
-	wg sync.WaitGroup
-	num uint32 = 2
+	catCh  = make(chan struct{})
+	wg     sync.WaitGroup
+	num    uint32 = 2
 )
 
 func main() {
@@ -30,10 +30,10 @@ func dog() {
 		if counter >= num {
 			log.Info("dog done.")
 			wg.Done()
-			<- catCh
+			<-catCh
 			return
 		}
-		<- catCh
+		<-catCh
 		fmt.Println("dog")
 		atomic.AddUint32(&counter, 1)
 		dogCh <- struct{}{}
@@ -48,13 +48,13 @@ func fish() {
 			wg.Done()
 			return
 		}
-		<- dogCh
+		<-dogCh
 		fmt.Println("fish")
 		atomic.AddUint32(&counter, 1)
 		fishCh <- struct{}{}
 	}
 }
-	
+
 func cat() {
 	var counter uint32
 	for {
@@ -63,7 +63,7 @@ func cat() {
 			wg.Done()
 			return
 		}
-		<- fishCh
+		<-fishCh
 		fmt.Println("cat")
 		atomic.AddUint32(&counter, 1)
 		catCh <- struct{}{}

@@ -8,11 +8,11 @@ import (
 
 type User struct {
 	Name string
-	Age int
+	Age  int
 }
 
 type Admin struct {
-	Id string
+	Id       string
 	Password string
 }
 

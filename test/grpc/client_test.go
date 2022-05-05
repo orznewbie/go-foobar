@@ -28,7 +28,7 @@ func TestGetFile(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	time.Sleep(time.Second*1)
+	time.Sleep(time.Second * 1)
 	file, err := clt.GetFile(ctx, &testpb.Input{Name: "file0"})
 	if err != nil {
 		t.Fatal(err)
@@ -48,7 +48,7 @@ func TestUpload(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		if err := stream.Send(&testpb.Data{
 			Id:      "file" + strconv.Itoa(i),
-			Content: "movie data fragment"+ strconv.Itoa(i),
+			Content: "movie data fragment" + strconv.Itoa(i),
 		}); err != nil {
 			t.Fatal(err)
 		}

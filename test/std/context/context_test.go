@@ -27,8 +27,8 @@ func ComplexCal(ctx context.Context, num int) (int, error) {
 		for i := 1; i <= num; i++ {
 			sum += i
 		}
-		time.Sleep(time.Second*1)
-		ch <- struct {}{}
+		time.Sleep(time.Second * 1)
+		ch <- struct{}{}
 	}()
 
 	select {

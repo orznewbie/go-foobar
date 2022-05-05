@@ -84,7 +84,7 @@ func testDgraphMutate(t *testing.T) (tx *api.TxnContext) {
 	// Request.CommitNow=false的事务会被保存在Dgraph，我们可以根据Response.Txn拿到这个事务，在之后进行Commit或Abort
 	// Txn.StartTs是事务的开始时间戳，也是事务的唯一标识
 	resp, err := dc.Query(context.Background(), &api.Request{
-		StartTs:    0,
+		StartTs: 0,
 		Mutations: []*api.Mutation{
 			{
 				SetNquads: []byte(`<0xc351> <name> "ttt" .`),

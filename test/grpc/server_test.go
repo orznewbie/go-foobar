@@ -34,16 +34,16 @@ func (d *DataServiceImpl) GetFile(ctx context.Context, input *testpb.Input) (*te
 		d.dataMu.RLock()
 		file = d.dataCenter[input.Name]
 		// 模拟文件查询耗时
-		time.Sleep(time.Second*3)
+		time.Sleep(time.Second * 3)
 		d.dataMu.RUnlock()
 		ch <- struct{}{}
 	}()
 
 	select {
-	case <- ctx.Done():
+	case <-ctx.Done():
 		d.log.Info("从进入到超时经过: ", time.Now().Sub(start))
 		return nil, ctx.Err()
-	case <- ch:
+	case <-ch:
 		if file != nil {
 			return file, nil
 		}

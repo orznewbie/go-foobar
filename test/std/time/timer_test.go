@@ -22,11 +22,11 @@ func TestTimer(t *testing.T) {
 }
 
 func TestAfterFunc(t *testing.T) {
-	timer := time.AfterFunc(time.Second*3,printHello)
-	time.Sleep(time.Second*2)
+	timer := time.AfterFunc(time.Second*3, printHello)
+	time.Sleep(time.Second * 2)
 	timer.Stop()
 	var ch = make(chan struct{})
-	<- ch
+	<-ch
 }
 
 func printHello() {

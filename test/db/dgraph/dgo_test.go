@@ -173,11 +173,11 @@ func TestTx(t *testing.T) {
 	defer cc.Close()
 
 	txA := dg.NewTxn()
-	time.Sleep(time.Second*2)
+	time.Sleep(time.Second * 2)
 	txB := dg.NewTxn()
 
 	resp, err := txA.Mutate(context.TODO(), &api.Mutation{
-		SetNquads:  []byte(`<0xc351> <name> "AAA" .`),
+		SetNquads: []byte(`<0xc351> <name> "AAA" .`),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -185,7 +185,7 @@ func TestTx(t *testing.T) {
 	log.Info("txA: ", resp.Txn)
 
 	resp, err = txB.Mutate(context.TODO(), &api.Mutation{
-		SetNquads:  []byte(`<0xc351> <name> "BBB" .`),
+		SetNquads: []byte(`<0xc351> <name> "BBB" .`),
 	})
 	if err != nil {
 		t.Fatal(err)
