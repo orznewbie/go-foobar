@@ -98,4 +98,4 @@ out
 gen
 
 # testdata
-testdata/
+/test/**/testdata/
