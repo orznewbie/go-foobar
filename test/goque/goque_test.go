@@ -8,7 +8,7 @@ import (
 )
 
 func TestStack(t *testing.T) {
-	s, err := goque.OpenStack("stack_dir")
+	s, err := goque.OpenStack("testdata/stack_dir")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func TestStack(t *testing.T) {
 }
 
 func TestQueue(t *testing.T) {
-	q, _ := goque.OpenQueue("queue_dir")
+	q, _ := goque.OpenQueue("testdata/queue_dir")
 	q.Enqueue([]byte("xxx"))
 	q.EnqueueString("yyy")
 
@@ -51,7 +51,7 @@ func TestObjectQueue(t *testing.T) {
 	req := Request{Query: "query{}"}
 	alter := Alter{Schema: "type{}"}
 
-	q, _ := goque.OpenQueue("object_dir")
+	q, _ := goque.OpenQueue("testdata/object_dir")
 	//q.EnqueueObject(req)
 	//q.EnqueueObject(alter)
 
