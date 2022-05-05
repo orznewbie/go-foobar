@@ -1,48 +1,71 @@
 package main
 
 import (
-	"flag"
-	"github.com/naoina/toml"
+	"fmt"
+	"sync"
+	"sync/atomic"
 	"github.com/orznewbie/gotmpl/pkg/log"
-	"os"
+)
+
+var (
+	dogCh = make(chan struct{})
+	fishCh = make(chan struct{})
+	catCh = make(chan struct{})
+	wg sync.WaitGroup
+	num uint32 = 2
 )
 
 func main() {
-	flag.Parse()
+	wg.Add(3)
+	go dog()
+	go fish()
+	go cat()
+	catCh <- struct{}{}
+	wg.Wait()
+}
 
-	cfg, err := LoadConfigFile(*configFile)
-	if err != nil {
-		panic(err)
+func dog() {
+	var counter uint32
+	for {
+		if counter >= num {
+			log.Info("dog done.")
+			wg.Done()
+			<- catCh
+			return
+		}
+		<- catCh
+		fmt.Println("dog")
+		atomic.AddUint32(&counter, 1)
+		dogCh <- struct{}{}
 	}
-	log.Info(cfg)
 }
 
-var (
-	configFile = flag.String("config", "../../../configs/config.toml", "Configuration file to use")
-)
-
-// LoadConfigFile parses the specified file into a Config object
-func LoadConfigFile(filename string) (cfg Config, err error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return cfg, err
+func fish() {
+	var counter uint32
+	for {
+		if counter >= num {
+			log.Info("fish done.")
+			wg.Done()
+			return
+		}
+		<- dogCh
+		fmt.Println("fish")
+		atomic.AddUint32(&counter, 1)
+		fishCh <- struct{}{}
 	}
-	defer f.Close()
-
-	return cfg, toml.NewDecoder(f).Decode(&cfg)
 }
-
-type Config struct {
-	RPCRelays []RPCConfig `toml:"rpc"`
-}
-
-type RPCConfig struct {
-	// Name identifies the HTTP relay
-	Name string `toml:"name"`
-
-	// Addr should be set to the desired listening host:port
-	Addr string `toml:"bind-addr"`
-
-	// Persistent buffer path
-	BufferDir string `toml:"buffer-dir"`
+	
+func cat() {
+	var counter uint32
+	for {
+		if counter >= num {
+			log.Info("cat done.")
+			wg.Done()
+			return
+		}
+		<- fishCh
+		fmt.Println("cat")
+		atomic.AddUint32(&counter, 1)
+		catCh <- struct{}{}
+	}
 }
