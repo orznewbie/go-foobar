@@ -1,6 +1,7 @@
 package dgraph
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/dgraph-io/dgo/v210"
@@ -50,31 +51,33 @@ func TestDropPred(t *testing.T) {
 	dg, cc := dgoClient()
 	defer cc.Close()
 
-	dropAttr := `dtdl:test:Room::area dtdl:test:Room::room_number`
+	//dropAttr := `dtdl:test:Room::area dtdl:test:Room::room_number`
 
-	schema := `
-	type <dtdl:test:Room> {
-		dtdl:core:Metadata::etag
-		dtdl:core:Metadata::extends
-		dtdl:core:Metadata::revision
-		dtdl:core:Metadata::version
-		dtdl:core:Metadata::create_time
-		dtdl:core:Metadata::update_time
-		dtdl:core:Metadata::delete_time
-		dtdl:test:Space::space_number
-		dtdl:test:Space::capacity
+	//schema := `
+	//type <dtdl:test:Room> {
+	//	dtdl:core:Metadata::etag
+	//	dtdl:core:Metadata::extends
+	//	dtdl:core:Metadata::revision
+	//	dtdl:core:Metadata::version
+	//	dtdl:core:Metadata::create_time
+	//	dtdl:core:Metadata::update_time
+	//	dtdl:core:Metadata::delete_time
+	//	dtdl:test:Space::space_number
+	//	dtdl:test:Space::capacity
+	//
+	//	dtdl:test:Space::is_part_of
+	//	dtdl:core:Object::displayName
+	//	dtdl:core:Object::discription
+	//	dtdl:core:Object::comment
+	//}
+	//`
 
-		dtdl:test:Space::is_part_of
-		dtdl:core:Object::displayName
-		dtdl:core:Object::discription
-		dtdl:core:Object::comment
-	}
-	`
-
-	if err := dg.Alter(context.Background(), &api.Operation{
-		Schema:   schema,
-		DropAttr: dropAttr}); err != nil {
-		t.Fatal(err)
+	for i := 1; i <= 100; i++ {
+		if err := dg.Alter(context.Background(), &api.Operation{
+			//Schema:   schema,
+			DropAttr: fmt.Sprintf("pred%d", i)}); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 
@@ -163,6 +166,7 @@ func TestMutate(t *testing.T) {
 	}
 
 	tx.Commit(context.Background())
+	//tx.Discard(context.Background())
 
 	log.Info(resp)
 
@@ -173,29 +177,55 @@ func TestTx(t *testing.T) {
 	defer cc.Close()
 
 	txA := dg.NewTxn()
-	time.Sleep(time.Second * 2)
 	txB := dg.NewTxn()
 
 	resp, err := txA.Mutate(context.TODO(), &api.Mutation{
-		SetNquads: []byte(`<0xc351> <name> "AAA" .`),
+		SetNquads: []byte(`<0xc351> <name> "aaa" .`),
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	log.Info("txA: ", resp.Txn)
+	t.Log("txA: ", resp.Txn)
 
 	resp, err = txB.Mutate(context.TODO(), &api.Mutation{
-		SetNquads: []byte(`<0xc351> <name> "BBB" .`),
+		SetNquads: []byte(`<0xc351> <name> "bbb" .`),
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	log.Info("txB: ", resp.Txn)
+	t.Log("txB: ", resp.Txn)
 
 	if err := txA.Commit(context.TODO()); err != nil {
-		log.Error(err)
+		t.Fatal(err)
 	}
 	if err := txB.Commit(context.TODO()); err != nil {
-		log.Error(err)
+		t.Fatal(err)
+	}
+}
+
+func TestAlterSchema(t *testing.T) {
+	dg, cc := dgoClient()
+	defer cc.Close()
+
+	// 测试AlterSchema在被超时或取消时会不会只修改了部分Schema
+	var buf bytes.Buffer
+	for i := 1; i <= 1000000; i++ {
+		buf.WriteString(fmt.Sprintf("pred%d: int .\n", i))
+	}
+
+	// 在超时之后，Alter失败，没有写入任何Predicate，所以Alter可以看做有“原子性”
+	//ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
+	//defer cancel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(time.Microsecond*500)
+		cancel()
+	}()
+
+	if err := dg.Alter(ctx, &api.Operation{
+		Schema: buf.String(),
+	}); err != nil {
+		t.Fatal(err)
 	}
 }

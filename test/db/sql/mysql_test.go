@@ -8,13 +8,13 @@ import (
 )
 
 func mysqlDB() *sql.DB {
-	DB, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
+	db, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
 	if err != nil {
 		panic(err)
 	}
-	DB.SetConnMaxLifetime(100)
-	DB.SetMaxIdleConns(10)
-	return DB
+	db.SetConnMaxLifetime(100)
+	db.SetMaxIdleConns(10)
+	return db
 }
 
 func TestConn(t *testing.T) {
@@ -29,6 +29,7 @@ func TestConn(t *testing.T) {
 type User struct {
 	Name string `json:"name"`
 	Age  int32  `json:"age"`
+	Money int32 `json:"money"`
 }
 
 func TestQuery(t *testing.T) {
@@ -42,7 +43,7 @@ func TestQuery(t *testing.T) {
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&user.Name, &user.Age); err != nil {
+		if err := rows.Scan(&user.Name, &user.Age, &user.Money); err != nil {
 			log.Error(err)
 		}
 		log.Info(user)
@@ -69,4 +70,37 @@ func TestAdd(t *testing.T) {
 	tx.Commit()
 
 	log.Info(res.LastInsertId())
+}
+
+func TestSingleConn(t *testing.T) {
+	db, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	db.SetMaxOpenConns(1)
+	row, err := db.Query("SELECT * FROM user where name='张三'")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var user User
+
+	//
+	//for row.Next() {
+	//	if err := row.Scan(&user.Name, &user.Age, &user.Money); err != nil {
+	//		t.Fatal(err)
+	//	}
+	//	t.Log(user)
+	//}
+
+	row, err = db.Query("SELECT * FROM user where name='李四'")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for row.Next() {
+		if err := row.Scan(&user.Name, &user.Age, &user.Money); err != nil {
+			t.Fatal(err)
+		}
+		t.Log(user)
+	}
 }

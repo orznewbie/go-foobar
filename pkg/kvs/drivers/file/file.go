@@ -16,7 +16,7 @@ func init() {
 
 type Driver struct{}
 
-func (drv *Driver) Open(dsn string) (driver.Session, error) {
+func (d *Driver) Open(dsn string) (driver.Session, error) {
 	return NewSession(dsn)
 }
 
