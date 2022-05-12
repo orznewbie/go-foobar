@@ -12,7 +12,7 @@ require (
 	github.com/naoina/go-stringutil v0.1.0 // indirect
 	github.com/naoina/toml v0.1.1
 	github.com/pkg/errors v0.9.1
-	github.com/rabbitmq/amqp091-go v1.3.4
+	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.2
