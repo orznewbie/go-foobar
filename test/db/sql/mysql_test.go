@@ -2,9 +2,11 @@ package sql
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/orznewbie/gotmpl/pkg/log"
 	"testing"
+	"time"
 )
 
 func mysqlDB() *sql.DB {
@@ -12,8 +14,9 @@ func mysqlDB() *sql.DB {
 	if err != nil {
 		panic(err)
 	}
-	db.SetConnMaxLifetime(100)
-	db.SetMaxIdleConns(10)
+	db.SetConnMaxLifetime(2*time.Hour)
+	db.SetMaxIdleConns(2)
+	db.SetMaxOpenConns(1)
 	return db
 }
 
@@ -35,18 +38,22 @@ type User struct {
 func TestQuery(t *testing.T) {
 	DB := mysqlDB()
 
-	var user User
-	rows, err := DB.Query("SELECT * FROM user")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&user.Name, &user.Age, &user.Money); err != nil {
-			log.Error(err)
+	for i := 0; i < 5; i++ {
+		var user User
+		rows, err := DB.Query("SELECT * FROM user")
+		if err != nil {
+			t.Fatal(err)
 		}
-		log.Info(user)
+		//defer rows.Close()
+
+		for rows.Next() {
+			if err := rows.Scan(&user.Name, &user.Age, &user.Money); err != nil {
+				log.Error(err)
+			}
+			log.Info(user)
+		}
+
+		fmt.Println()
 	}
 }
 

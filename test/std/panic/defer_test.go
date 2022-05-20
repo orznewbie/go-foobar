@@ -5,8 +5,9 @@ import (
 	"testing"
 )
 
+// 在Go的panic机制中，延迟函数的调用在释放堆栈信息之前
+
 func foo() (ans int) {
-	// defer在return之前执行
 	defer func() {
 		fmt.Println(ans) 	// 打印 1
 	}()
@@ -27,5 +28,3 @@ func TestPanicDefer(t *testing.T) {
 	var arr []int
 	fmt.Println(arr[0])
 }
-
-// 在Go的panic机制中，延迟函数的调用在释放堆栈信息之前
