@@ -126,8 +126,8 @@ func TestWorkPublish(t *testing.T) {
 				false,       // immediate
 				amqp.Publishing{
 					ContentType:   "text/plain",
-					CorrelationId: corrId,		// 消息标记，Consumer返回的消息应该携带该标记，以便Publisher识别
-					ReplyTo:       q.Name,		// 告诉Consumer把结果投递到哪个消息队列
+					CorrelationId: corrId, // 消息标记，Consumer返回的消息应该携带该标记，以便Publisher识别
+					ReplyTo:       q.Name, // 告诉Consumer把结果投递到哪个消息队列
 					Body:          []byte(strconv.Itoa(i)),
 				}); err != nil {
 				t.Error(err)

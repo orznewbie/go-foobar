@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 	"github.com/orznewbie/gotmpl/pkg/log"
 	"strconv"
 	"sync"
@@ -11,8 +12,34 @@ import (
 	"time"
 )
 
-func mysqlDB() *sql.DB {
-	db, err := sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
+const (
+	CreateUserTable = `
+		CREATE TABLE IF NOT EXISTS user(
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			name VARCHAR(30),
+			age INT,
+			PRIMARY KEY (id)
+		)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	`
+)
+
+var (
+	once    sync.Once
+	mysqldb *sqlx.DB
+)
+
+func init() {
+	once.Do(func() {
+		mysqldb = sqlDB("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
+	})
+	_, err := mysqldb.ExecContext(context.Background(), CreateUserTable)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func sqlDB(driver, dns string) *sqlx.DB {
+	db, err := sqlx.Connect(driver, dns)
 	if err != nil {
 		panic(err)
 	}
@@ -23,33 +50,31 @@ func mysqlDB() *sql.DB {
 	// maxIdleCount <= maxOpen，如果maxIdleCount设置的比maxOpen还大，会自动调整maxIdleCount = maxOpen
 	// freeConn []*driverConn为可重复使用的连接，所以len(freeConn) <= maxIdleOpen
 	db.SetMaxIdleConns(3)
-	db.SetConnMaxLifetime(30*time.Minute)
+	db.SetConnMaxLifetime(30 * time.Minute)
 	return db
 }
 
-func TestConn(t *testing.T) {
-	db := mysqlDB()
-	if err := db.Ping(); err != nil {
+func TestPing(t *testing.T) {
+	if err := mysqldb.Ping(); err != nil {
 		t.Fatal(err)
 	}
 	log.Info("pong!")
 }
 
 func TestMaxOpenConns(t *testing.T) {
-	db := mysqlDB()
-	db.SetMaxOpenConns(1)
+	mysqldb.SetMaxOpenConns(1)
 
 	var wg sync.WaitGroup
 	wg.Add(3)
-	for i := 1; i <= 3;i++ {
+	for i := 1; i <= 3; i++ {
 		go func(n int) {
-			tx, err := db.Begin()
+			tx, err := mysqldb.Begin()
 			if err != nil {
 				panic(err)
 			}
 			defer tx.Rollback()
 
-			log.Infof("open tx %d", n)
+			log.Infof("begin tx %d", n)
 			time.Sleep(2 * time.Second)
 			wg.Done()
 		}(i)
@@ -59,22 +84,20 @@ func TestMaxOpenConns(t *testing.T) {
 }
 
 type User struct {
-	Name string `json:"name"`
-	Age  int32  `json:"age"`
-	Money int32 `json:"money"`
+	Id   string `db:"id"`
+	Name string `db:"name"`
+	Age  int32  `db:"age"`
 }
 
 func TestTxQuery(t *testing.T) {
-	db := mysqlDB()
-
-	tx, err := db.BeginTx(context.Background(), &sql.TxOptions{
+	tx, err := mysqldb.BeginTx(context.Background(), &sql.TxOptions{
 		Isolation: sql.LevelRepeatableRead,
 		ReadOnly:  true,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer tx.Rollback()		// 开启后事务立即defer Rollback，不处理Rollback的error，这样即使事务提交也没问题
+	defer tx.Rollback() // 开启后事务立即defer Rollback，不处理Rollback的error，这样即使事务提交也没问题
 
 	var user User
 	rows, err := tx.QueryContext(context.Background(), "SELECT * FROM user")
@@ -88,7 +111,7 @@ func TestTxQuery(t *testing.T) {
 	}()
 
 	for rows.Next() {
-		if err := rows.Scan(&user.Name, &user.Age, &user.Money); err != nil {
+		if err := rows.Scan(&user.Id, &user.Name, &user.Age); err != nil {
 			log.Error(err)
 		}
 		log.Info(user)
@@ -100,19 +123,24 @@ func TestTxQuery(t *testing.T) {
 	}
 }
 
+func TestSqlxQuery(t *testing.T) {
+	var users []User
+	if err := mysqldb.SelectContext(context.Background(), &users, "SELECT age,name FROM user WHERE age>10;"); err != nil {
+		t.Fatal(err)
+	}
+	log.Info(users)
+}
+
 func TestCommitNowAdd(t *testing.T) {
-	db := mysqlDB()
 	// 直接使用db.Exec是默认将事务提交了
-	_, err := db.ExecContext(context.Background(), "INSERT INTO user (`name`, `age`) VALUES(?, ?)", "CommitNow", 0)
+	_, err := mysqldb.ExecContext(context.Background(), "INSERT INTO user (`name`, `age`) VALUES(?, ?)", "CommitNow", 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestTxAdd(t *testing.T) {
-	db := mysqlDB()
-
-	tx, err := db.BeginTx(context.Background(), &sql.TxOptions{
+	tx, err := mysqldb.BeginTx(context.Background(), &sql.TxOptions{
 		Isolation: sql.LevelReadCommitted,
 		ReadOnly:  false,
 	})
@@ -122,7 +150,7 @@ func TestTxAdd(t *testing.T) {
 	defer tx.Rollback()
 
 	// 单条插入更新直接使用tx.Exec
-	_, err = tx.ExecContext(context.Background(), "INSERT INTO user (`name`, `age`) VALUES(?, ?)", "复制人0", 0)
+	_, err = tx.ExecContext(context.Background(), "INSERT INTO user (`name`, `age`) VALUES(?, ?)", "临时用户", 100)
 
 	if err := tx.Commit(); err != nil {
 		log.Warnf("tx commit error: %v", err)
@@ -131,9 +159,7 @@ func TestTxAdd(t *testing.T) {
 }
 
 func TestTxBatchAdd(t *testing.T) {
-	db := mysqlDB()
-
-	tx, err := db.Begin()
+	tx, err := mysqldb.Begin()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +172,7 @@ func TestTxBatchAdd(t *testing.T) {
 	}
 
 	for i := 1; i <= 3; i++ {
-		_, err := stmt.ExecContext(context.Background(), "复制人" + strconv.Itoa(i), i * 10000)
+		_, err := stmt.ExecContext(context.Background(), "用户"+strconv.Itoa(i), i*10)
 		if err != nil {
 			t.Fatal(err)
 		}

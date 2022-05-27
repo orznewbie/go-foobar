@@ -132,12 +132,21 @@ func TestQuery(t *testing.T) {
 	dg, cc := dgoClient()
 	defer cc.Close()
 
-	q := `
-	query {
-	  q(func:has(dgraph.type),first:2) {
-		uid
-	  }
-	}`
+	//q := `
+	//query {
+	//  q(func:has(dgraph.type),first:2) {
+	//	uid
+	//  }
+	//}`
+
+	q := `query{
+	q(func: uid(0x2715)) {
+    uid
+    <dtdl:test:Space::is_part_of> @filter(uid(0x2719))@facets {
+      uid
+  		}
+  }
+}`
 
 	resp, err := dg.NewReadOnlyTxn().Query(context.Background(), q)
 	if err != nil {
@@ -165,7 +174,17 @@ func TestMutate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tx.Commit(context.Background())
+	log.Info(resp)
+
+	resp, err = tx.Mutate(context.Background(), &api.Mutation{
+		SetNquads: []byte(quad),
+		CommitNow: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//tx.Commit(context.Background())
 	//tx.Discard(context.Background())
 
 	log.Info(resp)
@@ -203,29 +222,37 @@ func TestTx(t *testing.T) {
 	}
 }
 
+// 测试AlterSchema在被超时或取消时会不会只修改了部分Schema
+// 结论：不会
 func TestAlterSchema(t *testing.T) {
 	dg, cc := dgoClient()
 	defer cc.Close()
 
-	// 测试AlterSchema在被超时或取消时会不会只修改了部分Schema
 	var buf bytes.Buffer
 	for i := 1; i <= 1000000; i++ {
 		buf.WriteString(fmt.Sprintf("pred%d: int .\n", i))
 	}
 
-	// 在超时之后，Alter失败，没有写入任何Predicate，所以Alter可以看做有“原子性”
+	// 在超时或主动Cancel之后，Alter失败，没有写入任何Predicate，所以Alter可以看做有“原子性”
 	//ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
 	//defer cancel()
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	go func() {
-		time.Sleep(time.Microsecond*500)
-		cancel()
+		if err := dg.Alter(ctx, &api.Operation{
+			Schema: buf.String(),
+		}); err != nil {
+			log.Error(err)
+			return
+		}
 	}()
 
-	if err := dg.Alter(ctx, &api.Operation{
-		Schema: buf.String(),
-	}); err != nil {
-		t.Fatal(err)
+	select {
+	case <-time.After(time.Microsecond * 500):
+		cancel()
 	}
+
+	<-time.After(time.Second)
 }

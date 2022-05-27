@@ -9,7 +9,7 @@ import (
 
 func foo() (ans int) {
 	defer func() {
-		fmt.Println(ans) 	// 打印 1
+		fmt.Println(ans) // 打印 1
 	}()
 	ans = 1
 	return

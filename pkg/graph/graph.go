@@ -1,11 +1,9 @@
 package graph
 
 type Node struct {
-
 }
 
 type Edge struct {
-
 }
 
 type G interface {

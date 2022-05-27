@@ -1,4 +1,4 @@
-package sql
+package clickhouse
 
 //func TestClickhouse(t *testing.T) {
 //	conn := clickhouse.OpenDB(&clickhouse.Options{

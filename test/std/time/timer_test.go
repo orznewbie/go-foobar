@@ -11,7 +11,7 @@ func TestTimer(t *testing.T) {
 	timer := time.NewTimer(time.Second * 2)
 
 	go func() {
-		time.Sleep(3*time.Second)
+		time.Sleep(3 * time.Second)
 		log.Info("Hello World!")
 	}()
 

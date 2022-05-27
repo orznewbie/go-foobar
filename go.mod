@@ -4,10 +4,12 @@ go 1.16
 
 require (
 	github.com/beeker1121/goque v2.1.0+incompatible
-	github.com/dgraph-io/badger/v3 v3.2103.2 // indirect
 	github.com/dgraph-io/dgo/v210 v210.0.0-20211129111319-4c8247ebe697
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/jmoiron/sqlx v1.3.5
+	github.com/json-iterator/go v1.1.11
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/mailru/easyjson v0.7.7
 	github.com/naoina/go-stringutil v0.1.0 // indirect

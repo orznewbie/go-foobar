@@ -8,7 +8,7 @@ import (
 
 type User struct {
 	Name string
-	Age int
+	Age  int
 }
 
 func (u *User) SayHello(str string) string {
@@ -18,7 +18,7 @@ func (u *User) SayHello(str string) string {
 func TestReflect(t *testing.T) {
 	user := User{
 		Name: "zs",
-		Age: 38,
+		Age:  38,
 	}
 	v := reflect.ValueOf(user)
 

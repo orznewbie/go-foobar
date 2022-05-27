@@ -2,15 +2,18 @@ package main
 
 import "fmt"
 
-func main() {
-	defer func() {
-		fmt.Println("hello world")
-	}()
-
-	foo()
+type A struct {
+	Name       string
+	Attributes map[string]string
 }
 
-func foo() {
-	var arr []int
-	fmt.Println(arr[0])
+func main() {
+	var m = map[string]string{
+		"1": "x",
+		"2": "y",
+	}
+
+	for a := range m {
+		fmt.Println(a)
+	}
 }
