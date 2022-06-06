@@ -1,10 +1,12 @@
-package sql
+package mariadb
 
 import (
 	"context"
 	"encoding/json"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/orznewbie/gotmpl/pkg/log"
+	testsql "github.com/orznewbie/gotmpl/test/db/sql"
 	"testing"
 )
 
@@ -32,11 +34,18 @@ type (
 var mariadb *sqlx.DB
 
 func init() {
-	mariadb = sqlDB("mysql", "root:123456@tcp(127.0.0.1:13306)/test")
+	mariadb = testsql.NewDB("mysql", "root:123456@tcp(127.0.0.1:13306)/test")
 	_, err := mariadb.ExecContext(context.Background(), CreateVertexTable)
 	if err != nil {
 		panic(err)
 	}
+}
+
+func TestPing(t *testing.T) {
+	if err := mariadb.Ping(); err != nil {
+		t.Fatal(err)
+	}
+	log.Info("pong!")
 }
 
 func TestDynamicQuery(t *testing.T) {
@@ -94,6 +103,29 @@ func TestDynamicUpdate(t *testing.T) {
 
 	var args = []map[string]interface{}{
 		{"color": "red", "price": 300},
+	}
+	_, err := tx.NamedExecContext(ctx, q, args)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDynamicAddArray(t *testing.T) {
+	q := `INSERT INTO vertex (create_time, attributes) 
+		VALUES (:create_time, COLUMN_CREATE('dtdl:test:implements', :implements));`
+
+	ctx := context.Background()
+
+	tx := mariadb.MustBeginTx(ctx, nil)
+	defer tx.Rollback()
+
+	byt, _ := json.Marshal([]string{"space", "room"})
+	var args = []map[string]interface{}{
+		{"create_time": 666, "dtdl:test:implements": byt},
 	}
 	_, err := tx.NamedExecContext(ctx, q, args)
 	if err != nil {

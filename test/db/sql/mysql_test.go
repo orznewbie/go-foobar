@@ -30,28 +30,12 @@ var (
 
 func init() {
 	once.Do(func() {
-		mysqldb = sqlDB("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
+		mysqldb = NewDB("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
 	})
 	_, err := mysqldb.ExecContext(context.Background(), CreateUserTable)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func sqlDB(driver, dns string) *sqlx.DB {
-	db, err := sqlx.Connect(driver, dns)
-	if err != nil {
-		panic(err)
-	}
-	// 最大的连接数量maxOpen
-	// numOpen是已打开的连接数量，所以numOpen <= maxOpen
-	db.SetMaxOpenConns(5)
-	// maxIdleCount是连接池中最大的可以重复使用的连接数量，默认是2
-	// maxIdleCount <= maxOpen，如果maxIdleCount设置的比maxOpen还大，会自动调整maxIdleCount = maxOpen
-	// freeConn []*driverConn为可重复使用的连接，所以len(freeConn) <= maxIdleOpen
-	db.SetMaxIdleConns(3)
-	db.SetConnMaxLifetime(30 * time.Minute)
-	return db
 }
 
 func TestPing(t *testing.T) {
@@ -100,7 +84,7 @@ func TestTxQuery(t *testing.T) {
 	defer tx.Rollback() // 开启后事务立即defer Rollback，不处理Rollback的error，这样即使事务提交也没问题
 
 	var user User
-	rows, err := tx.QueryContext(context.Background(), "SELECT * FROM user")
+	rows, err := tx.QueryContext(context.Background(), "SELECT * FROM user LIMIT 0,10")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,7 +133,6 @@ func TestTxAdd(t *testing.T) {
 	}
 	defer tx.Rollback()
 
-	// 单条插入更新直接使用tx.Exec
 	_, err = tx.ExecContext(context.Background(), "INSERT INTO user (`name`, `age`) VALUES(?, ?)", "临时用户", 100)
 
 	if err := tx.Commit(); err != nil {
@@ -159,23 +142,28 @@ func TestTxAdd(t *testing.T) {
 }
 
 func TestTxBatchAdd(t *testing.T) {
-	tx, err := mysqldb.Begin()
+	ctx := context.Background()
+	tx, err := mysqldb.BeginTxx(ctx, &sql.TxOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer tx.Rollback()
 
-	// Batch批量插入更新应该使用Prepare语句，减少数据库连接次数
-	stmt, err := tx.PrepareContext(context.Background(), "INSERT INTO user (`name`, `age`) VALUES(?, ?)")
-	if err != nil {
-		t.Fatal(err)
+	var (
+		//q = `INSERT INTO user (name, age) VALUES(:name, :age)`
+		q = `INSERT INTO c (valuec) VALUES(:value)`
+		args []map[string]interface{}
+	)
+
+	for i := 1; i <= 10000; i++ {
+		args = append(args, map[string]interface{}{
+			"value":"a"+strconv.Itoa(i),
+			//"age":1,
+		})
 	}
 
-	for i := 1; i <= 3; i++ {
-		_, err := stmt.ExecContext(context.Background(), "用户"+strconv.Itoa(i), i*10)
-		if err != nil {
-			t.Fatal(err)
-		}
+	if _, err := tx.NamedExecContext(ctx, q, args); err != nil {
+		t.Fatal(err)
 	}
 
 	if err := tx.Commit(); err != nil {

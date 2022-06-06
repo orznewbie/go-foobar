@@ -36,7 +36,7 @@ const (
 
 func init() {
 	once.Do(func() {
-		mysqldb = sqlDB("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
+		mysqldb = NewDB("mysql", "root:123456@tcp(127.0.0.1:3306)/test")
 	})
 	_, err := mysqldb.ExecContext(context.Background(), CreateObjectTable)
 	if err != nil {
