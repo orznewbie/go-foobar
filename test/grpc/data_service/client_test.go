@@ -1,4 +1,4 @@
-package grpc
+package data_service
 
 import (
 	"context"
@@ -12,10 +12,9 @@ import (
 	"time"
 )
 
-var ServerAddr = "127.0.0.1:223"
 
 func NewDataClient() (testpb.DataServiceClient, *grpc.ClientConn) {
-	cc, err := grpc.Dial(ServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	cc, err := grpc.Dial("127.0.0.1:223", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
 	}

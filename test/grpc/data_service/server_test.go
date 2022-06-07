@@ -1,4 +1,4 @@
-package grpc
+package data_service
 
 import (
 	"context"
@@ -18,10 +18,23 @@ import (
 
 type DataServiceImpl struct {
 	testpb.UnimplementedDataServiceServer
-	dataMu     sync.RWMutex
+	dataMu     *sync.RWMutex
 	dataCenter map[string]*testpb.Data
 
 	log log.Logger
+}
+
+func NewDataServiceImpl() *DataServiceImpl {
+	return &DataServiceImpl{
+		dataMu: new(sync.RWMutex),
+		dataCenter: map[string]*testpb.Data{
+			"file0": {
+				Id:      "file0",
+				Content: "movie data fragment0",
+			},
+		},
+		log: log.Named("data_service"),
+	}
 }
 
 func (d *DataServiceImpl) GetFile(ctx context.Context, input *testpb.Input) (*testpb.Data, error) {
@@ -86,18 +99,9 @@ func (d *DataServiceImpl) Download(input *testpb.Input, stream testpb.DataServic
 	return nil
 }
 
-func TestDataServiceImpl(t *testing.T) {
+func TestDataServiceServer(t *testing.T) {
 	srv := grpc.NewServer()
-	impl := &DataServiceImpl{
-		dataMu: sync.RWMutex{},
-		dataCenter: map[string]*testpb.Data{
-			"file0": {
-				Id:      "file0",
-				Content: "movie data fragment0",
-			},
-		},
-		log: log.Named("data service"),
-	}
+	impl := NewDataServiceImpl()
 	testpb.RegisterDataServiceServer(srv, impl)
 
 	lis, err := net.Listen("tcp", "127.0.0.1:223")
