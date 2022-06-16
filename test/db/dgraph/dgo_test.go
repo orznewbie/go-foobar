@@ -222,9 +222,25 @@ func TestTx(t *testing.T) {
 	}
 }
 
+func TestAlterSchema(t *testing.T) {
+	dg, cc := dgoClient()
+	defer cc.Close()
+
+	schema := `
+<dtdl:test:Space::yyyyyyyyyyyyyyyyyyyy>: string @index(hash) .
+<dtdl:test:Space::capacity>: int @index(int) .
+type <dtdl:test:Space;1> {
+	<dtdl:core:Metadata::etag>
+}`
+
+	if err := dg.Alter(context.Background(), &api.Operation{Schema: schema}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // 测试AlterSchema在被超时或取消时会不会只修改了部分Schema
 // 结论：不会
-func TestAlterSchema(t *testing.T) {
+func TestAlterSchemaCancel(t *testing.T) {
 	dg, cc := dgoClient()
 	defer cc.Close()
 
@@ -255,4 +271,26 @@ func TestAlterSchema(t *testing.T) {
 	}
 
 	<-time.After(time.Second)
+}
+
+func TestDeleteEdge(t *testing.T) {
+	dg, cc := dgoClient()
+	defer cc.Close()
+
+	var dqlNquads = []byte("<0x2714> * * .\n")
+
+	//var nquad = &api.NQuad{
+	//	Subject:   "0x2714",
+	//	Predicate: "*",
+	//	ObjectId:  "*",
+	//	Namespace: 0,
+	//}
+
+	if _, err := dg.NewTxn().Mutate(context.Background(), &api.Mutation{
+		//Del:       []*api.NQuad{nquad},
+		DelNquads: dqlNquads,
+		CommitNow: true,
+	}); err != nil {
+		t.Fatal(err)
+	}
 }
