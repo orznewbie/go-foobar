@@ -8,10 +8,23 @@ option go_package = "github.com/orznewbie/api/test;testpb";
 
 import "google/protobuf/field_mask.proto";
 
+message Admin {
+  string id = 1;
+  string pwd = 2;
+}
+
+message Tourist {
+  string ip = 1;
+}
+
 message User {
   uint64 id = 1;
   string name = 2;
   uint32 age = 3;
+  oneof role {
+    Admin admin = 4;
+    Tourist tourist = 5;
+  }
 }
 
 message GetUserRequest {

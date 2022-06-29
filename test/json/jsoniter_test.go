@@ -1,9 +1,10 @@
 package json
 
 import (
+	"testing"
+
 	jsoniter "github.com/json-iterator/go"
 	"github.com/orznewbie/gotmpl/pkg/log"
-	"testing"
 )
 
 func TestJsoniter(t *testing.T) {

@@ -2,18 +2,20 @@ package data_service
 
 import (
 	"context"
+	"io"
+	"net"
+	"sync"
+	"testing"
+	"time"
+
 	testpb "github.com/orznewbie/gotmpl/api/test"
+
 	"github.com/orznewbie/gotmpl/pkg/log"
 	rpccode "google.golang.org/genproto/googleapis/rpc/code"
 	rpcstatus "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"io"
-	"net"
-	"sync"
-	"testing"
-	"time"
 )
 
 type DataServiceImpl struct {

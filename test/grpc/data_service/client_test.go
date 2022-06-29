@@ -2,16 +2,16 @@ package data_service
 
 import (
 	"context"
-	testpb "github.com/orznewbie/gotmpl/api/test"
-	"github.com/orznewbie/gotmpl/pkg/log"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"io"
 	"strconv"
 	"testing"
 	"time"
-)
 
+	testpb "github.com/orznewbie/gotmpl/api/test"
+	"github.com/orznewbie/gotmpl/pkg/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+)
 
 func NewDataClient() (testpb.DataServiceClient, *grpc.ClientConn) {
 	cc, err := grpc.Dial("127.0.0.1:223", grpc.WithTransportCredentials(insecure.NewCredentials()))

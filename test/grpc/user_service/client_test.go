@@ -3,11 +3,12 @@ package user_service
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	testpb "github.com/orznewbie/gotmpl/api/test"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
-	"testing"
 )
 
 func NewUserClient() (testpb.UserServiceClient, *grpc.ClientConn) {

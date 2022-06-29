@@ -1,8 +1,9 @@
 package channel
 
 import (
-	"github.com/orznewbie/gotmpl/pkg/log"
 	"testing"
+
+	"github.com/orznewbie/gotmpl/pkg/log"
 )
 
 func TestChannel(t *testing.T) {

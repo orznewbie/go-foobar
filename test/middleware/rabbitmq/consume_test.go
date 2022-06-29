@@ -1,9 +1,10 @@
 package rabbitmq
 
 import (
-	"github.com/streadway/amqp"
 	"strconv"
 	"testing"
+
+	"github.com/streadway/amqp"
 )
 
 func TestMessageConsume(t *testing.T) {

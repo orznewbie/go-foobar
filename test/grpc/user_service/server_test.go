@@ -2,14 +2,15 @@ package user_service
 
 import (
 	"context"
+	"net"
+	"sync"
+	"testing"
+
 	testpb "github.com/orznewbie/gotmpl/api/test"
 	"github.com/orznewbie/gotmpl/pkg/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"net"
-	"sync"
-	"testing"
 )
 
 type UserServiceImpl struct {

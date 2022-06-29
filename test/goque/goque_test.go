@@ -2,9 +2,10 @@ package goque
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/beeker1121/goque"
 	"github.com/orznewbie/gotmpl/pkg/log"
-	"testing"
 )
 
 func TestStack(t *testing.T) {
