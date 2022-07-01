@@ -6,7 +6,11 @@ import (
 	"sync"
 	"testing"
 
-	testpb "github.com/orznewbie/gotmpl/api/test"
+	"google.golang.org/genproto/googleapis/longrunning"
+
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	user_v1 "github.com/orznewbie/gotmpl/api/user/v1"
 	"github.com/orznewbie/gotmpl/pkg/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -14,16 +18,18 @@ import (
 )
 
 type UserServiceImpl struct {
-	testpb.UnimplementedUserServiceServer
+	user_v1.UnimplementedUserServiceServer
+	longrunning.UnimplementedOperationsServer
+
 	mu     *sync.RWMutex
-	users  map[uint64]*testpb.User
-	lastId uint64
+	users  map[uint64]*user_v1.User
+	lastID uint64
 }
 
 func NewUserServiceImpl() *UserServiceImpl {
 	return &UserServiceImpl{
 		mu: new(sync.RWMutex),
-		users: map[uint64]*testpb.User{
+		users: map[uint64]*user_v1.User{
 			1: {
 				Id:   1,
 				Name: "张三",
@@ -40,20 +46,19 @@ func NewUserServiceImpl() *UserServiceImpl {
 				Age:  30,
 			},
 		},
-		lastId: 4,
+		lastID: 4,
 	}
 }
 
-func (u *UserServiceImpl) GetUser(ctx context.Context, in *testpb.GetUserRequest) (*testpb.User, error) {
+func (u *UserServiceImpl) GetUser(ctx context.Context, in *user_v1.GetUserRequest) (*user_v1.User, error) {
 	u.mu.RLock()
-	defer u.mu.RUnlock()
-
 	user, ok := u.users[in.Id]
+	u.mu.RUnlock()
 	if !ok {
-		return nil, status.Errorf(codes.NotFound, "user(id=%v) not found", in.Id)
+		return nil, status.Errorf(codes.NotFound, "user(id=%v)", in.Id)
 	}
 
-	var ret = new(testpb.User)
+	var ret = new(user_v1.User)
 	if in.GetMask == nil {
 		ret = user
 	} else {
@@ -71,29 +76,42 @@ func (u *UserServiceImpl) GetUser(ctx context.Context, in *testpb.GetUserRequest
 
 	return ret, nil
 }
-func (u *UserServiceImpl) CreateUser(ctx context.Context, in *testpb.CreateUserRequest) (*testpb.User, error) {
+func (u *UserServiceImpl) CreateUser(ctx context.Context, in *user_v1.CreateUserRequest) (*user_v1.User, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	u.users[u.lastId] = in.User
-	u.lastId++
+	u.users[u.lastID] = in.User
+	u.lastID++
 	return in.User, nil
 }
-func (u *UserServiceImpl) UpdateUser(ctx context.Context, in *testpb.UpdateUserRequest) (*testpb.User, error) {
+func (u *UserServiceImpl) UpdateUser(ctx context.Context, in *user_v1.UpdateUserRequest) (*user_v1.User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
 }
 
-func TestUserServiceServer(t *testing.T) {
+func (u *UserServiceImpl) DeleteUser(ctx context.Context, in *user_v1.DeleteUserRequest) (*emptypb.Empty, error) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	_, ok := u.users[in.Id]
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "user[id=%d]", in.Id)
+	}
+	delete(u.users, in.Id)
+
+	return new(emptypb.Empty), nil
+}
+
+func TestUserService(t *testing.T) {
 	srv := grpc.NewServer()
 	impl := NewUserServiceImpl()
-	testpb.RegisterUserServiceServer(srv, impl)
+	user_v1.RegisterUserServiceServer(srv, impl)
+	longrunning.RegisterOperationsServer(srv, impl)
 
-	const addr = "127.0.0.1:666"
-	lis, err := net.Listen("tcp", addr)
+	lis, err := net.Listen("tcp", UserServiceHost)
 	if err != nil {
 		t.Fatal(err)
 	}
-	log.Infof("server listening on %s..", addr)
+	log.Infof("server listening on %s..", UserServiceHost)
 
 	if err := srv.Serve(lis); err != nil {
 		t.Fatal(err)

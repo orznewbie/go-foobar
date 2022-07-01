@@ -1,0 +1,14 @@
+type: google.api.Service
+config_version: 3
+
+http:
+  rules:
+    - selector: google.longrunning.Operations.GetOperation
+      get: /orznewbie/v1/operations/{name}
+
+    - selector: google.longrunning.Operations.DeleteOperation
+      delete: /orznewbie/v1/operations/{name}
+
+    - selector: google.longrunning.Operations.CancelOperation
+      post: /orznewbie/v1/operations/{name}:cancel
+      body: "*"

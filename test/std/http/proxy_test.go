@@ -34,25 +34,27 @@ func NewProxy(targetHost string) (*httputil.ReverseProxy, error) {
 	return proxy, nil
 }
 
-func PingPong(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Ping Pong from Reverse Proxy Server"))
-}
+func TestReverseProxy(t *testing.T) {
+	go TestMockGoogleSearchService(t)
+	go TestMockGoogleUserService(t)
 
-func TestProxy(t *testing.T) {
-	// initialize a reverse proxy and pass the actual backend server url here
-	proxy, err := NewProxy("http://127.0.0.1:1234")
+	searchProxy, err := NewProxy("http://127.0.0.1:18888")
+	if err != nil {
+		t.Fatal(err)
+	}
+	userProxy, err := NewProxy("http://127.0.0.1:28888")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// handle all requests to your server using the proxy
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		proxy.ServeHTTP(w, r)
+	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+		searchProxy.ServeHTTP(w, r)
+	})
+	http.HandleFunc("/user/", func(w http.ResponseWriter, r *http.Request) {
+		userProxy.ServeHTTP(w, r)
 	})
 
-	http.HandleFunc("/ping", PingPong)
-
-	if err := http.ListenAndServe(":8888", nil); err != nil {
+	if err := http.ListenAndServe(":18080", nil); err != nil {
 		t.Fatal(err)
 	}
 }

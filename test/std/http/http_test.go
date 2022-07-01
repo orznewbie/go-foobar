@@ -1,27 +1,50 @@
 package http
 
 import (
-	"github.com/orznewbie/gotmpl/pkg/log"
+	"fmt"
 	"net/http"
 	"testing"
 )
 
-func sayHello(w http.ResponseWriter, r *http.Request) {
-	log.Info(r)
-	w.Write([]byte("Hello World!"))
+func search(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	text, ok := query["text"]
+	if !ok || len(text) < 1 {
+		w.Write([]byte("url param 'text' missing"))
+		return
+	}
+	w.Write([]byte("search " + text[0] + " result: xxx.."))
 }
 
-func sayByeBye(w http.ResponseWriter, r *http.Request) {
-	log.Info(r)
-	w.Write([]byte("Bye Bye!"))
+func login(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	id, ok := query["id"]
+	if !ok || len(id) < 1 {
+		w.Write([]byte("url param 'id' missing"))
+		return
+	}
+	pwd, ok := query["pwd"]
+	if !ok || len(pwd) < 1 {
+		w.Write([]byte("url param 'pwd' missing"))
+		return
+	}
+	w.Write([]byte(fmt.Sprintf("id=%s pwd=%s login successful!!", id[0], pwd[0])))
 }
 
-func TestHttp(t *testing.T) {
+func TestMockGoogleSearchService(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/hello/", sayHello)
-	mux.HandleFunc("/bye", sayByeBye)
+	mux.HandleFunc("/search", search)
 
-	if err := http.ListenAndServe(":1234", mux); err != nil {
+	if err := http.ListenAndServe(":18888", mux); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestMockGoogleUserService(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/user/login", login)
+
+	if err := http.ListenAndServe(":28888", mux); err != nil {
 		t.Fatal(err)
 	}
 }
