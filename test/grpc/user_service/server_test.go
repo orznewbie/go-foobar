@@ -107,7 +107,8 @@ func TestUserService(t *testing.T) {
 	user_v1.RegisterUserServiceServer(srv, impl)
 	longrunning.RegisterOperationsServer(srv, impl)
 
-	lis, err := net.Listen("tcp", UserServiceHost)
+	lis, err := net.Listen("tcp"+
+		"", UserServiceHost)
 	if err != nil {
 		t.Fatal(err)
 	}

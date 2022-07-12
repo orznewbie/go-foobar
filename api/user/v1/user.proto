@@ -1,10 +1,10 @@
 syntax = "proto3";
 
 // proto的包名，给别的proto文件import该文件的字段时使用
-package orznewbie.api.user.v1;
+package gotmpl.api.user.v1;
 
 // ;分号前的路径为生成的pb文件的相对路径，会被命令行的go_out参数覆盖;分号后为包名
-option go_package = "github.com/orznewbie/api/user/v1;user_v1";
+option go_package = "github.com/orznewbie/gotmpl/api/user/v1;user_v1";
 
 import "google/protobuf/field_mask.proto";
 import "google/api/annotations.proto";
@@ -29,6 +29,18 @@ message User {
   }
 }
 
+message LiseUsersRequest {
+  string filter = 1;
+
+  // The maximum number of items to return.
+  int32 page_size = 2;
+
+  // The next_page_token value returned from a previous List request, if any.
+  string page_token = 3;
+
+  string order_by = 4;
+}
+
 message GetUserRequest {
   uint64 id = 1;
   google.protobuf.FieldMask get_mask = 2;
@@ -47,30 +59,41 @@ message DeleteUserRequest {
   uint64 id = 1;
 }
 
+message ListUsersResponse {
+  repeated User users = 1;
+  string next_page_token = 2;
+}
+
 service UserService {
+  rpc ListUsers(LiseUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get: "/gotmpl/v1/users:list"
+    };
+  }
+
   rpc GetUser(GetUserRequest) returns (User) {
     option (google.api.http) = {
-      get: "/orznewbie/v1/users/{id}"
+      get: "/gotmpl/v1/users/{id}"
     };
   }
 
   rpc CreateUser(CreateUserRequest) returns (User) {
     option (google.api.http) = {
-      post: "/orznewbie/v1/users"
+      post: "/gotmpl/v1/users"
       body: "user"
     };
   }
 
   rpc UpdateUser(UpdateUserRequest) returns (User) {
     option (google.api.http) = {
-      patch: "/orznewbie/v1/users"
+      patch: "/gotmpl/v1/users"
       body: "user"
     };
   }
 
   rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/orznewbie/v1/users/{id}"
+      delete: "/gotmpl/v1/users/{id}"
     };
   }
 }

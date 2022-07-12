@@ -15,8 +15,8 @@ func TestMessageConsume(t *testing.T) {
 	}()
 
 	if err := ch.ExchangeDeclare(
-		LogsDirectExchange,
-		"direct",
+		ExchangeLogsDirect,
+		amqp.ExchangeDirect,
 		true,
 		false,
 		false,
@@ -26,7 +26,7 @@ func TestMessageConsume(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	normalQueue, err := ch.QueueDeclare(
+	queue, err := ch.QueueDeclare(
 		// If "", an auto-generate name will be used
 		"",
 		false,
@@ -44,12 +44,21 @@ func TestMessageConsume(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err := ch.QueueBind(
+		queue.Name,
+		TestRoutingKey,
+		ExchangeLogsDirect,
+		false,
+		nil); err != nil {
+		t.Fatal(err)
+	}
 
-	wrongQueue, err := ch.QueueDeclare(
+	delivery, err := ch.Consume(
+		queue.Name,
 		"",
-		false,
-		false,
 		true,
+		false,
+		false,
 		false,
 		nil,
 	)
@@ -57,67 +66,9 @@ func TestMessageConsume(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := ch.QueueBind(
-		normalQueue.Name,
-		"info",
-		LogsDirectExchange,
-		false,
-		nil); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := ch.QueueBind(
-		wrongQueue.Name,
-		"warning",
-		LogsDirectExchange,
-		false,
-		nil); err != nil {
-		t.Fatal(err)
-	}
-	if err := ch.QueueBind(
-		wrongQueue.Name,
-		"error",
-		LogsDirectExchange,
-		false,
-		nil); err != nil {
-		t.Fatal(err)
-	}
-
-	normalDelivery, err := ch.Consume(
-		normalQueue.Name, // queue
-		"",               // consumer
-		true,             // auto ack
-		false,            // exclusive
-		false,            // no local
-		false,            // no wait
-		nil,              // args
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	go func() {
-		for dlv := range normalDelivery {
-			t.Logf("queue %s receive: %s", normalQueue.Name, string(dlv.Body))
-		}
-	}()
-
-	wrongDelivery, err := ch.Consume(
-		wrongQueue.Name, // queue
-		"",              // consumer
-		true,            // auto ack
-		false,           // exclusive
-		false,           // no local
-		false,           // no wait
-		nil,             // args
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	go func() {
-		for dlv := range wrongDelivery {
-			t.Logf("queue %s receive: %s", wrongQueue.Name, string(dlv.Body))
+		for dlv := range delivery {
+			t.Logf("queue(name=%s) receive: %s", queue.Name, string(dlv.Body))
 		}
 	}()
 
@@ -139,13 +90,13 @@ func TestWorkConsume(t *testing.T) {
 		ch.Close()
 	}()
 
-	q, err := ch.QueueDeclare(
-		"rpc_queue", // name
-		false,       // durable
-		false,       // delete when unused
-		false,       // exclusive
-		false,       // no-wait
-		nil,         // arguments
+	inputQueue, err := ch.QueueDeclare(
+		RPCCall,
+		false,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -159,13 +110,13 @@ func TestWorkConsume(t *testing.T) {
 	}
 
 	dlv, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		false,  // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		inputQueue.Name,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -180,15 +131,12 @@ func TestWorkConsume(t *testing.T) {
 				return
 			}
 
-			t.Logf("call fib(%d)..", n)
 			ans := fib(n)
-			t.Logf("done. fib(%d) = %d", n, ans)
-
 			if err := ch.Publish(
-				"",        // exchange
-				d.ReplyTo, // routing key
-				false,     // mandatory
-				false,     // immediate
+				ExchangeDefault,
+				d.ReplyTo,
+				false,
+				false,
 				amqp.Publishing{
 					ContentType:   "text/plain",
 					CorrelationId: d.CorrelationId,
@@ -198,6 +146,77 @@ func TestWorkConsume(t *testing.T) {
 			}
 
 			d.Ack(false)
+		}
+	}()
+
+	var forever chan struct{}
+	<-forever
+}
+
+func TestMessageDelayConsume(t *testing.T) {
+	ch, conn := rmqChannel()
+	defer func() {
+		conn.Close()
+		ch.Close()
+	}()
+
+	if err := ch.ExchangeDeclare(
+		ExchangeDelayDirect,
+		"x-delayed-message",
+		true,
+		false,
+		false,
+		false,
+		amqp.Table{
+			"x-delayed-type": "direct",
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	queue, err := ch.QueueDeclare(
+		// If "", an auto-generate name will be used
+		"",
+		false,
+		// delete when unused
+		false,
+		// Exclusive queues are only accessible by the connection that declares them and
+		// will be deleted when the connection closes
+		true,
+		// When noWait is true, the queue will assume to be declared on the server.  A
+		// channel exception will arrive if the conditions are met for existing queues
+		// or attempting to modify an existing queue from a different connection.
+		false,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := ch.QueueBind(
+		queue.Name,
+		TestRoutingKey,
+		ExchangeDelayDirect,
+		false,
+		nil); err != nil {
+		t.Fatal(err)
+	}
+
+	delivery, err := ch.Consume(
+		queue.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	go func() {
+		for dlv := range delivery {
+			t.Logf("queue(name=%s) receive: %s", queue.Name, string(dlv.Body))
 		}
 	}()
 
