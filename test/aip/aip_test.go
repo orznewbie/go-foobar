@@ -2,9 +2,9 @@ package aip
 
 import (
 	"fmt"
-	"testing"
-
+	"github.com/orznewbie/gotmpl/pkg/dqlx"
 	expr "google.golang.org/genproto/googleapis/api/expr/v1alpha1"
+	"testing"
 
 	"go.einride.tech/aip/filtering"
 
@@ -84,6 +84,7 @@ func TestParseFilter(t *testing.T) {
 		filtering.DeclareStandardFunctions(),
 		filtering.DeclareIdent("a", filtering.TypeInt),
 		filtering.DeclareIdent("b", filtering.TypeString),
+		filtering.DeclareIdent("c", filtering.TypeInt),
 		//filtering.DeclareIdent("c", filtering.TypeFloat),
 		//filtering.DeclareIdent("d", filtering.TypeString),
 		//filtering.DeclareFunction("regex", filtering.NewFunctionOverload("regex_string", filtering.TypeBool, filtering.TypeString, filtering.TypeString)),
@@ -92,48 +93,61 @@ func TestParseFilter(t *testing.T) {
 		t.Fatal(err)
 	}
 	req := &user_v1.LiseUsersRequest{
-		Filter: `a > 10 AND b = "x"`,
+		Filter: `a > 10 AND (b = "x" OR c < 100)`,
 	}
+	fmt.Printf("before: \n%s\n", req.Filter)
+
 	filter, err := filtering.ParseFilter(req, d)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	macroDeclarations, err := filtering.NewDeclarations(
-		filtering.DeclareStandardFunctions(),
-		filtering.DeclareIdent("a", filtering.TypeInt),
-		filtering.DeclareIdent("b", filtering.TypeString),
-		filtering.DeclareFunction("gt", filtering.NewFunctionOverload("gt", filtering.TypeBool, filtering.TypeString, filtering.TypeInt)),
-		filtering.DeclareFunction("eq", filtering.NewFunctionOverload("eq", filtering.TypeBool, filtering.TypeString, filtering.TypeString)),
-		//filtering.DeclareIdent("c", filtering.TypeFloat),
-		//filtering.DeclareIdent("d", filtering.TypeString),
-		//filtering.DeclareFunction("regex", filtering.NewFunctionOverload("regex_string", filtering.TypeBool, filtering.TypeString, filtering.TypeString)),
-	)
+	dqlxFilter, err := dfs(filter.CheckedExpr.GetExpr())
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	macro, err := filtering.ApplyMacros(filter, macroDeclarations, func(cursor *filtering.Cursor) {
-		callExpr := cursor.Expr().GetCallExpr()
-		if callExpr == nil || callExpr.GetFunction() == filtering.FunctionAnd {
-			return
-		}
-		if len(callExpr.Args) != 2 {
-			return
-		}
-		switch callExpr.GetFunction() {
-		case filtering.FunctionEquals:
-			cursor.Replace(filtering.Function("eq", callExpr.GetArgs()...))
-		case filtering.FunctionGreaterThan:
-			cursor.Replace(filtering.Function("gt", callExpr.GetArgs()...))
-		}
-	})
+	q, a, err := dqlxFilter.Dql()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(macro.CheckedExpr.String())
+	fmt.Println("\nafter:")
+	fmt.Println(q)
+	fmt.Println(a)
 }
 
-func dfs(filter *expr.Expr) {
-	//if filter.
+func dfs(ex *expr.Expr) (dqlx.Filter, error) {
+	callExpr, ok := ex.GetExprKind().(*expr.Expr_CallExpr)
+	if !ok {
+		return nil, fmt.Errorf("cannot parse filter: %v", ex)
+	}
+	var (
+		fn   = callExpr.CallExpr.GetFunction()
+		args = callExpr.CallExpr.GetArgs()
+	)
+	if fn != filtering.FunctionAnd && fn != filtering.FunctionOr {
+		switch fn {
+		case filtering.FunctionEquals:
+			return dqlx.Eq(args[0].GetIdentExpr().GetName(), args[1].GetConstExpr().GetStringValue()), nil
+		case filtering.FunctionGreaterThan:
+			return dqlx.Gt(args[0].GetIdentExpr().GetName(), args[1].GetConstExpr().GetInt64Value()), nil
+		case filtering.FunctionLessThan:
+			return dqlx.Gt(args[0].GetIdentExpr().GetName(), args[1].GetConstExpr().GetInt64Value()), nil
+		}
+	}
+
+	if len(args) != 2 {
+		return nil, fmt.Errorf("internal parse error")
+	}
+	left, err := dfs(args[0])
+	if err != nil {
+		return nil, err
+	}
+	right, err := dfs(args[1])
+	if err != nil {
+		return nil, err
+	}
+	if fn == filtering.FunctionAnd {
+		return dqlx.And(left, right), nil
+	}
+	return dqlx.Or(left, right), nil
 }
