@@ -85,7 +85,8 @@ func (u *UserServiceImpl) CreateUser(ctx context.Context, in *user_v1.CreateUser
 	return in.User, nil
 }
 func (u *UserServiceImpl) UpdateUser(ctx context.Context, in *user_v1.UpdateUserRequest) (*user_v1.User, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
+	return &user_v1.User{}, nil
+	//return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
 }
 
 func (u *UserServiceImpl) DeleteUser(ctx context.Context, in *user_v1.DeleteUserRequest) (*emptypb.Empty, error) {

@@ -36,7 +36,7 @@ require (
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	gotest.tools/v3 v3.1.0
+	gotest.tools/v3 v3.2.0 // indirect
 )
 
 replace github.com/vektah/gqlparser/v2 v2.4.4 => github.com/vektah/gqlparser/v2 v2.3.0

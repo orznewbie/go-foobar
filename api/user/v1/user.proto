@@ -39,6 +39,8 @@ message LiseUsersRequest {
   string page_token = 3;
 
   string order_by = 4;
+
+  int32 skip = 5;
 }
 
 message GetUserRequest {

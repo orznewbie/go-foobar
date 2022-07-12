@@ -28,7 +28,7 @@ func TestGetUser(t *testing.T) {
 
 	user, err := clt.GetUser(context.Background(), &user_v1.GetUserRequest{
 		Id:      2,
-		GetMask: &fieldmaskpb.FieldMask{Paths: []string{"id", "name"}},
+		GetMask: &fieldmaskpb.FieldMask{Paths: []string{"idd", "name"}},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -47,7 +47,7 @@ func TestUpdateUser(t *testing.T) {
 			Name: "",
 			Age:  100,
 		},
-		UpdateMask: nil,
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"xcvassd"}},
 	})
 	if err != nil {
 		t.Fatal(err)
