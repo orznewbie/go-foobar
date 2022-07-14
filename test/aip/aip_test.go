@@ -2,9 +2,11 @@ package aip
 
 import (
 	"fmt"
+	"strconv"
+	"testing"
+
 	"github.com/orznewbie/gotmpl/pkg/dqlx"
 	expr "google.golang.org/genproto/googleapis/api/expr/v1alpha1"
-	"testing"
 
 	"go.einride.tech/aip/filtering"
 
@@ -80,39 +82,59 @@ func TestFieldMask(t *testing.T) {
 }
 
 func TestParseFilter(t *testing.T) {
-	d, err := filtering.NewDeclarations(
-		filtering.DeclareStandardFunctions(),
-		filtering.DeclareIdent("a", filtering.TypeInt),
-		filtering.DeclareIdent("b", filtering.TypeString),
-		filtering.DeclareIdent("c", filtering.TypeInt),
-		//filtering.DeclareIdent("c", filtering.TypeFloat),
-		//filtering.DeclareIdent("d", filtering.TypeString),
-		//filtering.DeclareFunction("regex", filtering.NewFunctionOverload("regex_string", filtering.TypeBool, filtering.TypeString, filtering.TypeString)),
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	//d, err := filtering.NewDeclarations(
+	//	filtering.DeclareStandardFunctions(),
+	//	filtering.DeclareIdent("a", filtering.TypeBool),
+	//	filtering.DeclareIdent("b", filtering.TypeString),
+	//	filtering.DeclareIdent("c", filtering.TypeInt),
+	//	//filtering.DeclareIdent("c", filtering.TypeFloat),
+	//	//filtering.DeclareIdent("d", filtering.TypeString),
+	//	//filtering.DeclareFunction("regex", filtering.NewFunctionOverload("regex_string", filtering.TypeBool, filtering.TypeString, filtering.TypeString)),
+	//)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
 	req := &user_v1.LiseUsersRequest{
-		Filter: `a > 10 AND (b = "x" OR c < 100)`,
-	}
-	fmt.Printf("before: \n%s\n", req.Filter)
-
-	filter, err := filtering.ParseFilter(req, d)
-	if err != nil {
-		t.Fatal(err)
+		Filter: `a?12 = 1.1700`,
 	}
 
-	dqlxFilter, err := dfs(filter.CheckedExpr.GetExpr())
+	var parser filtering.Parser
+	parser.Init(req.Filter)
+	filter, err := parser.Parse()
 	if err != nil {
 		t.Fatal(err)
 	}
-	q, a, err := dqlxFilter.Dql()
-	if err != nil {
-		t.Fatal(err)
+
+	//callExpr := filter.GetExpr().GetExprKind().(*expr.Expr_CallExpr)
+
+	//str := fmt.Sprintf("res: %v", getValue(callExpr.CallExpr.GetArgs()[1].GetConstExpr()))
+	//fmt.Println(str)
+	fmt.Println(filter.Expr)
+
+	//dqlxFilter, err := dfs(filter.CheckedExpr.GetExpr())
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//q, a, err := dqlxFilter.Dql()
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//fmt.Println("\nafter:")
+	//fmt.Println(q)
+	//fmt.Println(a)
+}
+
+func getValue(kind *expr.Constant) string {
+	switch kindCast := kind.ConstantKind.(type) {
+	case *expr.Constant_StringValue:
+		return kindCast.StringValue
+	case *expr.Constant_Int64Value:
+		return strconv.FormatInt(kindCast.Int64Value, 10)
+	case *expr.Constant_DoubleValue:
+		return strconv.FormatFloat(kindCast.DoubleValue, 'E', -1, 64)
+
 	}
-	fmt.Println("\nafter:")
-	fmt.Println(q)
-	fmt.Println(a)
+	return ""
 }
 
 func dfs(ex *expr.Expr) (dqlx.Filter, error) {
