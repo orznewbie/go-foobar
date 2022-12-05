@@ -3,10 +3,11 @@ package kvs
 import (
 	"context"
 	"fmt"
-	"github.com/orznewbie/gotmpl/pkg/kvs/driver"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/orznewbie/go-foobar/pkg/kvs/driver"
 )
 
 type Store struct {

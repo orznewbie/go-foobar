@@ -2,12 +2,13 @@ package file
 
 import (
 	"context"
-	"github.com/orznewbie/gotmpl/pkg/kvs"
-	"github.com/orznewbie/gotmpl/pkg/kvs/driver"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/orznewbie/go-foobar/pkg/kvs"
+	"github.com/orznewbie/go-foobar/pkg/kvs/driver"
 )
 
 func init() {

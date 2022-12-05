@@ -2,11 +2,13 @@ package kvs
 
 import (
 	"context"
-	"github.com/orznewbie/gotmpl/pkg/kvs/driver"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"strings"
 	"sync"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/orznewbie/go-foobar/pkg/kvs/driver"
 )
 
 var (

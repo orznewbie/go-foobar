@@ -8,6 +8,7 @@ package user_v1
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -40,7 +41,7 @@ func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
 
 func (c *userServiceClient) ListUsers(ctx context.Context, in *LiseUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error) {
 	out := new(ListUsersResponse)
-	err := c.cc.Invoke(ctx, "/gotmpl.api.user.v1.UserService/ListUsers", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/go-foobar.api.user.v1.UserService/ListUsers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +50,7 @@ func (c *userServiceClient) ListUsers(ctx context.Context, in *LiseUsersRequest,
 
 func (c *userServiceClient) GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := c.cc.Invoke(ctx, "/gotmpl.api.user.v1.UserService/GetUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/go-foobar.api.user.v1.UserService/GetUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +59,7 @@ func (c *userServiceClient) GetUser(ctx context.Context, in *GetUserRequest, opt
 
 func (c *userServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := c.cc.Invoke(ctx, "/gotmpl.api.user.v1.UserService/CreateUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/go-foobar.api.user.v1.UserService/CreateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func (c *userServiceClient) CreateUser(ctx context.Context, in *CreateUserReques
 
 func (c *userServiceClient) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := c.cc.Invoke(ctx, "/gotmpl.api.user.v1.UserService/UpdateUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/go-foobar.api.user.v1.UserService/UpdateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,7 @@ func (c *userServiceClient) UpdateUser(ctx context.Context, in *UpdateUserReques
 
 func (c *userServiceClient) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/gotmpl.api.user.v1.UserService/DeleteUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/go-foobar.api.user.v1.UserService/DeleteUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +138,7 @@ func _UserService_ListUsers_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gotmpl.api.user.v1.UserService/ListUsers",
+		FullMethod: "/go-foobar.api.user.v1.UserService/ListUsers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).ListUsers(ctx, req.(*LiseUsersRequest))
@@ -155,7 +156,7 @@ func _UserService_GetUser_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gotmpl.api.user.v1.UserService/GetUser",
+		FullMethod: "/go-foobar.api.user.v1.UserService/GetUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).GetUser(ctx, req.(*GetUserRequest))
@@ -173,7 +174,7 @@ func _UserService_CreateUser_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gotmpl.api.user.v1.UserService/CreateUser",
+		FullMethod: "/go-foobar.api.user.v1.UserService/CreateUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
@@ -191,7 +192,7 @@ func _UserService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gotmpl.api.user.v1.UserService/UpdateUser",
+		FullMethod: "/go-foobar.api.user.v1.UserService/UpdateUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).UpdateUser(ctx, req.(*UpdateUserRequest))
@@ -209,7 +210,7 @@ func _UserService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gotmpl.api.user.v1.UserService/DeleteUser",
+		FullMethod: "/go-foobar.api.user.v1.UserService/DeleteUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).DeleteUser(ctx, req.(*DeleteUserRequest))
@@ -221,7 +222,7 @@ func _UserService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec f
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "gotmpl.api.user.v1.UserService",
+	ServiceName: "go-foobar.api.user.v1.UserService",
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

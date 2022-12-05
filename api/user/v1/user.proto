@@ -1,10 +1,10 @@
 syntax = "proto3";
 
 // proto的包名，给别的proto文件import该文件的字段时使用
-package gotmpl.api.user.v1;
+package go-foobar.api.user.v1;
 
 // ;分号前的路径为生成的pb文件的相对路径，会被命令行的go_out参数覆盖;分号后为包名
-option go_package = "github.com/orznewbie/gotmpl/api/user/v1;user_v1";
+option go_package = "github.com/orznewbie/go-foobar/api/user/v1;user_v1";
 
 import "google/protobuf/field_mask.proto";
 import "google/api/annotations.proto";
@@ -69,33 +69,33 @@ message ListUsersResponse {
 service UserService {
   rpc ListUsers(LiseUsersRequest) returns (ListUsersResponse) {
     option (google.api.http) = {
-      get: "/gotmpl/v1/users:list"
+      get: "/go-foobar/v1/users:list"
     };
   }
 
   rpc GetUser(GetUserRequest) returns (User) {
     option (google.api.http) = {
-      get: "/gotmpl/v1/users/{id}"
+      get: "/go-foobar/v1/users/{id}"
     };
   }
 
   rpc CreateUser(CreateUserRequest) returns (User) {
     option (google.api.http) = {
-      post: "/gotmpl/v1/users"
+      post: "/go-foobar/v1/users"
       body: "user"
     };
   }
 
   rpc UpdateUser(UpdateUserRequest) returns (User) {
     option (google.api.http) = {
-      patch: "/gotmpl/v1/users"
+      patch: "/go-foobar/v1/users"
       body: "user"
     };
   }
 
   rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/gotmpl/v1/users/{id}"
+      delete: "/go-foobar/v1/users/{id}"
     };
   }
 }

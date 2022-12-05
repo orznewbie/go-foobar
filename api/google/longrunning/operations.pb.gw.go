@@ -481,7 +481,7 @@ func RegisterOperationsHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/google.longrunning.Operations/GetOperation", runtime.WithHTTPPathPattern("/gotmpl/v1/operations/{name}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/google.longrunning.Operations/GetOperation", runtime.WithHTTPPathPattern("/go-foobar/v1/operations/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -527,7 +527,7 @@ func RegisterOperationsHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/google.longrunning.Operations/DeleteOperation", runtime.WithHTTPPathPattern("/gotmpl/v1/operations/{name}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/google.longrunning.Operations/DeleteOperation", runtime.WithHTTPPathPattern("/go-foobar/v1/operations/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -573,7 +573,7 @@ func RegisterOperationsHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/google.longrunning.Operations/CancelOperation", runtime.WithHTTPPathPattern("/gotmpl/v1/operations/{name}:cancel"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/google.longrunning.Operations/CancelOperation", runtime.WithHTTPPathPattern("/go-foobar/v1/operations/{name}:cancel"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -678,7 +678,7 @@ func RegisterOperationsHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/google.longrunning.Operations/GetOperation", runtime.WithHTTPPathPattern("/gotmpl/v1/operations/{name}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/google.longrunning.Operations/GetOperation", runtime.WithHTTPPathPattern("/go-foobar/v1/operations/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -718,7 +718,7 @@ func RegisterOperationsHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/google.longrunning.Operations/DeleteOperation", runtime.WithHTTPPathPattern("/gotmpl/v1/operations/{name}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/google.longrunning.Operations/DeleteOperation", runtime.WithHTTPPathPattern("/go-foobar/v1/operations/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -758,7 +758,7 @@ func RegisterOperationsHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/google.longrunning.Operations/CancelOperation", runtime.WithHTTPPathPattern("/gotmpl/v1/operations/{name}:cancel"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/google.longrunning.Operations/CancelOperation", runtime.WithHTTPPathPattern("/go-foobar/v1/operations/{name}:cancel"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -800,15 +800,15 @@ func RegisterOperationsHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 var (
 	pattern_Operations_ListOperations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 4, 1, 5, 2}, []string{"v1", "operations", "name"}, ""))
 
-	pattern_Operations_GetOperation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"gotmpl", "v1", "operations", "name"}, ""))
+	pattern_Operations_GetOperation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"go-foobar", "v1", "operations", "name"}, ""))
 
 	pattern_Operations_GetOperation_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 3, 0, 4, 2, 5, 2}, []string{"v1", "operations", "name"}, ""))
 
-	pattern_Operations_DeleteOperation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"gotmpl", "v1", "operations", "name"}, ""))
+	pattern_Operations_DeleteOperation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"go-foobar", "v1", "operations", "name"}, ""))
 
 	pattern_Operations_DeleteOperation_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 3, 0, 4, 2, 5, 2}, []string{"v1", "operations", "name"}, ""))
 
-	pattern_Operations_CancelOperation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"gotmpl", "v1", "operations", "name"}, "cancel"))
+	pattern_Operations_CancelOperation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"go-foobar", "v1", "operations", "name"}, "cancel"))
 
 	pattern_Operations_CancelOperation_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 3, 0, 4, 2, 5, 2}, []string{"v1", "operations", "name"}, "cancel"))
 )

@@ -4,11 +4,11 @@ config_version: 3
 http:
   rules:
     - selector: google.longrunning.Operations.GetOperation
-      get: /gotmpl/v1/operations/{name}
+      get: /go-foobar/v1/operations/{name}
 
     - selector: google.longrunning.Operations.DeleteOperation
-      delete: /gotmpl/v1/operations/{name}
+      delete: /go-foobar/v1/operations/{name}
 
     - selector: google.longrunning.Operations.CancelOperation
-      post: /gotmpl/v1/operations/{name}:cancel
+      post: /go-foobar/v1/operations/{name}:cancel
       body: "*"

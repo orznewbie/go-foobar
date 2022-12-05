@@ -9,13 +9,14 @@
 package user_v1
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -690,36 +691,36 @@ func file_api_user_v1_user_proto_rawDescGZIP() []byte {
 
 var file_api_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_api_user_v1_user_proto_goTypes = []interface{}{
-	(*Admin)(nil),                 // 0: gotmpl.api.user.v1.Admin
-	(*Tourist)(nil),               // 1: gotmpl.api.user.v1.Tourist
-	(*User)(nil),                  // 2: gotmpl.api.user.v1.User
-	(*LiseUsersRequest)(nil),      // 3: gotmpl.api.user.v1.LiseUsersRequest
-	(*GetUserRequest)(nil),        // 4: gotmpl.api.user.v1.GetUserRequest
-	(*CreateUserRequest)(nil),     // 5: gotmpl.api.user.v1.CreateUserRequest
-	(*UpdateUserRequest)(nil),     // 6: gotmpl.api.user.v1.UpdateUserRequest
-	(*DeleteUserRequest)(nil),     // 7: gotmpl.api.user.v1.DeleteUserRequest
-	(*ListUsersResponse)(nil),     // 8: gotmpl.api.user.v1.ListUsersResponse
+	(*Admin)(nil),                 // 0: go-foobar.api.user.v1.Admin
+	(*Tourist)(nil),               // 1: go-foobar.api.user.v1.Tourist
+	(*User)(nil),                  // 2: go-foobar.api.user.v1.User
+	(*LiseUsersRequest)(nil),      // 3: go-foobar.api.user.v1.LiseUsersRequest
+	(*GetUserRequest)(nil),        // 4: go-foobar.api.user.v1.GetUserRequest
+	(*CreateUserRequest)(nil),     // 5: go-foobar.api.user.v1.CreateUserRequest
+	(*UpdateUserRequest)(nil),     // 6: go-foobar.api.user.v1.UpdateUserRequest
+	(*DeleteUserRequest)(nil),     // 7: go-foobar.api.user.v1.DeleteUserRequest
+	(*ListUsersResponse)(nil),     // 8: go-foobar.api.user.v1.ListUsersResponse
 	(*fieldmaskpb.FieldMask)(nil), // 9: google.protobuf.FieldMask
 	(*emptypb.Empty)(nil),         // 10: google.protobuf.Empty
 }
 var file_api_user_v1_user_proto_depIdxs = []int32{
-	0,  // 0: gotmpl.api.user.v1.User.admin:type_name -> gotmpl.api.user.v1.Admin
-	1,  // 1: gotmpl.api.user.v1.User.tourist:type_name -> gotmpl.api.user.v1.Tourist
-	9,  // 2: gotmpl.api.user.v1.GetUserRequest.get_mask:type_name -> google.protobuf.FieldMask
-	2,  // 3: gotmpl.api.user.v1.CreateUserRequest.user:type_name -> gotmpl.api.user.v1.User
-	2,  // 4: gotmpl.api.user.v1.UpdateUserRequest.user:type_name -> gotmpl.api.user.v1.User
-	9,  // 5: gotmpl.api.user.v1.UpdateUserRequest.update_mask:type_name -> google.protobuf.FieldMask
-	2,  // 6: gotmpl.api.user.v1.ListUsersResponse.users:type_name -> gotmpl.api.user.v1.User
-	3,  // 7: gotmpl.api.user.v1.UserService.ListUsers:input_type -> gotmpl.api.user.v1.LiseUsersRequest
-	4,  // 8: gotmpl.api.user.v1.UserService.GetUser:input_type -> gotmpl.api.user.v1.GetUserRequest
-	5,  // 9: gotmpl.api.user.v1.UserService.CreateUser:input_type -> gotmpl.api.user.v1.CreateUserRequest
-	6,  // 10: gotmpl.api.user.v1.UserService.UpdateUser:input_type -> gotmpl.api.user.v1.UpdateUserRequest
-	7,  // 11: gotmpl.api.user.v1.UserService.DeleteUser:input_type -> gotmpl.api.user.v1.DeleteUserRequest
-	8,  // 12: gotmpl.api.user.v1.UserService.ListUsers:output_type -> gotmpl.api.user.v1.ListUsersResponse
-	2,  // 13: gotmpl.api.user.v1.UserService.GetUser:output_type -> gotmpl.api.user.v1.User
-	2,  // 14: gotmpl.api.user.v1.UserService.CreateUser:output_type -> gotmpl.api.user.v1.User
-	2,  // 15: gotmpl.api.user.v1.UserService.UpdateUser:output_type -> gotmpl.api.user.v1.User
-	10, // 16: gotmpl.api.user.v1.UserService.DeleteUser:output_type -> google.protobuf.Empty
+	0,  // 0: go-foobar.api.user.v1.User.admin:type_name -> go-foobar.api.user.v1.Admin
+	1,  // 1: go-foobar.api.user.v1.User.tourist:type_name -> go-foobar.api.user.v1.Tourist
+	9,  // 2: go-foobar.api.user.v1.GetUserRequest.get_mask:type_name -> google.protobuf.FieldMask
+	2,  // 3: go-foobar.api.user.v1.CreateUserRequest.user:type_name -> go-foobar.api.user.v1.User
+	2,  // 4: go-foobar.api.user.v1.UpdateUserRequest.user:type_name -> go-foobar.api.user.v1.User
+	9,  // 5: go-foobar.api.user.v1.UpdateUserRequest.update_mask:type_name -> google.protobuf.FieldMask
+	2,  // 6: go-foobar.api.user.v1.ListUsersResponse.users:type_name -> go-foobar.api.user.v1.User
+	3,  // 7: go-foobar.api.user.v1.UserService.ListUsers:input_type -> go-foobar.api.user.v1.LiseUsersRequest
+	4,  // 8: go-foobar.api.user.v1.UserService.GetUser:input_type -> go-foobar.api.user.v1.GetUserRequest
+	5,  // 9: go-foobar.api.user.v1.UserService.CreateUser:input_type -> go-foobar.api.user.v1.CreateUserRequest
+	6,  // 10: go-foobar.api.user.v1.UserService.UpdateUser:input_type -> go-foobar.api.user.v1.UpdateUserRequest
+	7,  // 11: go-foobar.api.user.v1.UserService.DeleteUser:input_type -> go-foobar.api.user.v1.DeleteUserRequest
+	8,  // 12: go-foobar.api.user.v1.UserService.ListUsers:output_type -> go-foobar.api.user.v1.ListUsersResponse
+	2,  // 13: go-foobar.api.user.v1.UserService.GetUser:output_type -> go-foobar.api.user.v1.User
+	2,  // 14: go-foobar.api.user.v1.UserService.CreateUser:output_type -> go-foobar.api.user.v1.User
+	2,  // 15: go-foobar.api.user.v1.UserService.UpdateUser:output_type -> go-foobar.api.user.v1.User
+	10, // 16: go-foobar.api.user.v1.UserService.DeleteUser:output_type -> google.protobuf.Empty
 	12, // [12:17] is the sub-list for method output_type
 	7,  // [7:12] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name

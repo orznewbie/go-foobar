@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/orznewbie/gotmpl/pkg/kvs/driver"
 	"sync"
 	"testing"
+
+	"github.com/orznewbie/go-foobar/pkg/kvs/driver"
 )
 
 func init() {
