@@ -1,1 +1,1 @@
-# Golang Template
+# Golang
