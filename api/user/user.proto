@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+// proto的包名，给别的proto文件import该文件的字段时使用
+package foobar.api.user;
+
+// ;分号前的路径为生成的pb文件的相对路径，会被命令行的go_out参数覆盖;分号后为包名
+option go_package = "github.com/orznewbie/go-foobar/api/user;userpb";
+
+import "google/protobuf/field_mask.proto";
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/empty.proto";
+
+message User {
+    int64  id   = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+    string name = 2;
+    uint32 age  = 3;
+}
+
+message GetUserRequest {
+    int64 id = 1;
+}
+
+message CreateUserRequest {
+    User user = 1;
+}
+
+message UpdateUserRequest {
+    User                      user        = 1;
+    google.protobuf.FieldMask update_mask = 2;
+}
+
+message DeleteUserRequest {
+    int64 id = 1;
+}
+
+service UserService {
+    rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+        option (google.api.http) = {
+            get: "/foobar/users:list"
+        };
+    }
+
+    rpc GetUser(GetUserRequest) returns (User) {
+        option (google.api.http) = {
+            get: "/foobar/users/{id}"
+        };
+    }
+
+    rpc CreateUser(CreateUserRequest) returns (User) {
+        option (google.api.http) = {
+            post: "/foobar/users"
+            body: "user"
+        };
+    }
+
+    rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/foobar/users/{id}"
+        };
+    }
+}
+
+message ListUsersRequest {
+
+}
+
+message ListUsersResponse {
+    repeated User users = 1;
+}
+
+

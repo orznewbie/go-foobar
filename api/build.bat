@@ -1,18 +1,24 @@
-cd %~dp0%/../
 @echo off
+cd %~dp0%/../
 
-protoc -I . -I ./third_party ^
-    --go_out paths=source_relative:. ^
-    --go-grpc_out paths=source_relative:. ^
-    --grpc-gateway_out . ^
-    --grpc-gateway_opt logtostderr=true ^
-    --grpc-gateway_opt paths=source_relative ^
-    api/user/v1/user.proto
+protoc -I ./third_party -I %GOPATH%/src --go_out=paths=source_relative:%GOPATH%/src ^
+	go-foobar/api/user/user.proto
 
-protoc -I . -I ./third_party ^
-    --grpc-gateway_out ./api ^
-    --grpc-gateway_opt logtostderr=true ^
-    --grpc-gateway_opt paths=source_relative ^
-    --grpc-gateway_opt grpc_api_configuration=api/google/longrunning/gateway_config.yaml ^
-    --grpc-gateway_opt standalone=true ^
-    google/longrunning/operations.proto
+protoc -I ./third_party -I %GOPATH%/src --go-grpc_out %GOPATH%/src --go-grpc_opt paths=source_relative ^
+	go-foobar/api/user/user.proto
+
+protoc -I ./third_party -I %GOPATH%/src --grpc-gateway_out %GOPATH%/src ^
+	--grpc-gateway_opt logtostderr=true ^
+	--grpc-gateway_opt paths=source_relative ^
+	go-foobar/api/user/user.proto
+
+protoc -I ./third_party -I %GOPATH%/src --validate_out=paths=source_relative,lang=go:%GOPATH%/src ^
+	go-foobar/api/user/user.proto
+
+protoc -I ./third_party -I %GOPATH%/src --openapiv2_out %GOPATH%/src ^
+	--openapiv2_opt logtostderr=true ^
+	--openapiv2_opt json_names_for_fields=true ^
+	--openapiv2_opt openapi_naming_strategy=simple ^
+	go-foobar/api/user/user.proto
+
+cd %~dp0%

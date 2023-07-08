@@ -1,0 +1,17 @@
+POST http://localhost:2230/foobar/users
+Content-Type: application/json
+
+{
+  "name": "huhaolong",
+  "age": 23
+}
+
+### GetUser
+GET http://localhost:2230/foobar/users/1
+Accept: application/json
+
+### ListUsers
+GET http://localhost:2230/foobar/users:list
+Accept: application/json
+
+
