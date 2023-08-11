@@ -1,11 +1,10 @@
-FROM golang:1.17 AS builder
+FROM alpine
 
-RUN mkdir /go-foobar
-COPY . /go-foobar
-WORKDIR /go-foobar/cmd/foobar
-RUN GOPROXY=https://goproxy.cn go build -o foobar .
+WORKDIR /foobar
 
-FROM busybox
+COPY ./cmd/foobar/foobar .
+COPY ./etc/foobar.json .
 
-COPY --from=builder /go-foobar/cmd/foobar/foobar /
-CMD ["./foobar"]
+RUN chmod +x foobar
+
+CMD ["./foobar", "-c", "foobar.json"]

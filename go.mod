@@ -1,6 +1,6 @@
 module github.com/orznewbie/go-foobar
 
-go 1.17
+go 1.20
 
 require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0

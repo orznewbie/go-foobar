@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foobar-deployment
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: foobar
+  template:
+    metadata:
+      labels:
+        app: foobar
+    spec:
+      containers:
+        - name: foobar
+          image: 192.168.3.3:5000/foobar:latest
+          ports:
+            - containerPort: 2230
